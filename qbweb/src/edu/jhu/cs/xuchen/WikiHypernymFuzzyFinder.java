@@ -43,20 +43,20 @@ public class WikiHypernymFuzzyFinder implements Serializable {
 	public WikiHypernymFuzzyFinder(String serName) {
 		this();
 		this.loadData(serName);
-		System.out.println("Loading data done");
-		System.out.println("Converting to fuzzy structure");
+//		System.out.println("Loading data done");
+//		System.out.println("Converting to fuzzy structure");
 		this.convertFuzzy();
 	}
 
 	private void convertFuzzy () {
 		int c = 0;
-		System.out.println("All entries: "+this.name2id.size());
+//		System.out.println("All entries: "+this.name2id.size());
 		for (String name:name2id.keySet()) {
 			this.name2idFuzzy.putFuzzy(name, this.name2id.get(name));
-			if (++c % 1000 == 0)
-				System.out.println(c);
+//			if (++c % 1000 == 0)
+//				System.out.println(c);
 		}
-		System.out.println("converting done");
+//		System.out.println("converting done");
 	}
 
 	private void loadData (String serName) {
@@ -123,7 +123,7 @@ public class WikiHypernymFuzzyFinder implements Serializable {
 	}
 
 	public HashSet<String> getHypernym (String name) {
-		System.out.println("### "+name+" ###");
+//		System.out.println("### "+name+" ###");
 		HashSet<String> hypernym = new HashSet<String>();
 		// strict matching
 		// use name2id to do exact matching since Fuzzy matching might not be precise
@@ -133,8 +133,8 @@ public class WikiHypernymFuzzyFinder implements Serializable {
 		if (indices == null)
 			indices = (HashSet<Integer>) this.name2idFuzzy.getFuzzy(name.toLowerCase());
 		if (indices == null)
-			return null;
-		System.out.println(indices.size()+" matching found");
+			return hypernym;
+//		System.out.println(indices.size()+" matching found");
 		for (Integer id:indices) {
 			Hyponym h = this.id2hyponym.get(id);
 			if (h.getIsASet() != null) hypernym.addAll(h.getIsASet());
