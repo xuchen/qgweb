@@ -11,5 +11,7 @@
 	<classpathentry kind="lib" path="lib/weka-3-6.jar"/>
 	<classpathentry kind="lib" path="question-generation.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/bing-search-java-sdk.jar"/>
+	<classpathentry kind="lib" path="lib/gson-1.4.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
