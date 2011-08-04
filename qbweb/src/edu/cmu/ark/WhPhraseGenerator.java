@@ -1,5 +1,6 @@
 package edu.cmu.ark;
 
+import edu.jhu.cs.xuchen.BingDisambiguator;
 import edu.jhu.cs.xuchen.WikiHypernymWrapper;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.trees.tregex.*;
@@ -164,6 +165,7 @@ public class WhPhraseGenerator {
 		answerNPHeadTokenIdx = start + leaves.indexOf(answerNP.headTerminal(AnalysisUtilities.getInstance().getHeadFinder()));
 		headSupersenseTag = supersenseTags.get(answerNPHeadTokenIdx);
 		this.headHypernymTagSet = this.hypernymTagsSet.get(answerNPHeadTokenIdx);
+		this.headHypernymDisambiguated = BingDisambiguator.getInstance().disambiguate(this.headHypernymTagSet, origSentence, ans.yield().toString());
 		headWord = sentenceTokens.get(answerNPHeadTokenIdx);
 	}
 
@@ -458,6 +460,7 @@ public class WhPhraseGenerator {
 	private String headWord;
 	private String headSupersenseTag;
 	private HashSet<String> headHypernymTagSet; // WikiNet Hypernym tag for a particular head word
+	private List<String> headHypernymDisambiguated;
 	private String answerPreposition;
 	private Tree answerPrepositionModifier;
 	private Set<String> peoplePronouns; //list of personal pronouns to consider as PERSON entities

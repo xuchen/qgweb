@@ -35,19 +35,28 @@ public class BingDisambiguator {
     protected static BingSearchClient client;
     protected static BingSearchServiceClientFactory factory;
 
+    private static BingDisambiguator instance = null;
+
+    public static BingDisambiguator getInstance () {
+    	if (instance == null) {
+    		instance = new BingDisambiguator();
+    	}
+    	return instance;
+    }
+
     public BingDisambiguator () {
 		factory = BingSearchServiceClientFactory.newInstance();
 		client = factory.createBingSearchClient();
     }
 
-    public List<String> disambiguate(HashSet<String> hypernymSet, String context, String answer) {
+    public List<String> disambiguate(HashSet<String> hypernymSet, String sentence, String answer) {
     	long cHypernym, cAll;
-    	context = context.replaceAll("and", "");
-    	context = context.replaceAll("or", "");
+    	sentence = sentence.replaceAll("and", "");
+    	sentence = sentence.replaceAll("or", "");
     	HashMap<String, Double> pmi= new HashMap<String, Double>();
     	for (String h:hypernymSet) {
-    		cHypernym = getTotalResults(h);
-    		cAll = getTotalResults(h+" "+answer+" "+context);
+    		cHypernym = getTotalResults(h+" "+answer);
+    		cAll = getTotalResults(h+" "+sentence);
     		pmi.put(h, cHypernym*1.0/cAll);
     	}
     	List<String> sortedHypernyms = sortByValue(pmi);
@@ -56,7 +65,7 @@ public class BingDisambiguator {
 
     private static long getTotalResults (String query) {
 
-    	SearchRequest request = createSearchRequest(client, APPLICATION_KEY_OPTION, "");
+    	SearchRequest request = createSearchRequest(client, APPLICATION_KEY_OPTION, query);
 		SearchResponse response = client.search(request);
 		return response.getWeb().getTotal();
     }
