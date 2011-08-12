@@ -35,18 +35,15 @@ public class QGSTEC2010 {
 	private Instance currentInstance;
 
 	private TestXmlParser parser;
-
-	public QGSTEC2010 () {
-		instanceList = new ArrayList<Instance>();
-		parser = new TestXmlParser();
-	}
 	
-	public QGSTEC2010 (String file) {
-		this(new File(file));
+
+	public QGSTEC2010 (String file, boolean dev) {
+		this(new File(file), dev);
 	}
 
-	public QGSTEC2010 (File file) {
-		this();
+	public QGSTEC2010 (File file, boolean dev) {
+		instanceList = new ArrayList<Instance>();
+		parser = new TestXmlParser(dev);
 		this.parser.parse(file);
 	}
 
@@ -58,17 +55,19 @@ public class QGSTEC2010 {
 
 		private Stack<String> stack;
 		private StringBuilder chars;
+		private boolean isDev;
 
-		public TestXmlParser () {
+		public TestXmlParser (boolean isDev) {
 			super();
 			this.stack = new Stack<String>();
 			this.chars = new StringBuilder();
+			this.isDev = isDev;
 		}
 
 		public void parse(File file) {
 			try {
 				XMLReader xr = XMLReaderFactory.createXMLReader();
-				TestXmlParser handler = new TestXmlParser();
+				TestXmlParser handler = new TestXmlParser(this.isDev);
 				xr.setContentHandler(handler);
 				xr.setErrorHandler(handler);
 
@@ -83,7 +82,7 @@ public class QGSTEC2010 {
 		public void parseString(String str) {
 			try {
 				XMLReader xr = XMLReaderFactory.createXMLReader();
-				TestXmlParser handler = new TestXmlParser();
+				TestXmlParser handler = new TestXmlParser(this.isDev);
 				xr.setContentHandler(handler);
 				xr.setErrorHandler(handler);
 
@@ -128,6 +127,9 @@ public class QGSTEC2010 {
 				// <question type="how many">
 				questionType = atts.getValue("type");
 				currentInstance.addQuestionType(questionType);
+				if (this.isDev)
+					// the Dev file only includes question type once
+					currentInstance.addQuestionType(questionType);
 			}
 			chars = new StringBuilder();
 			stack.push(qName);
@@ -256,7 +258,7 @@ public class QGSTEC2010 {
 		//File file = new File("/home/xcyao/delphin/mrs.xml/QuestionsFromSentences.Test.2010.small.xml");
 		//File file = new File("/home/xcyao/delphin/eval/QuestionsFromSentences.Test.2010.Saarland.xml");
 		File file = new File("/home/xcyao/delphin/mrs.xml/QuestionsFromSentences.Development.corrected.xml");
-		QGSTEC2010 q = new QGSTEC2010(file);
+		QGSTEC2010 q = new QGSTEC2010(file, true);
 		q.toXML(System.out);
 	}
 

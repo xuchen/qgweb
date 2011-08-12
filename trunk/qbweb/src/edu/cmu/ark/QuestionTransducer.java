@@ -227,8 +227,8 @@ public class QuestionTransducer {
 			for(int j=0; j<outputTrees.size(); j++){
 				Tree t = outputTrees.get(j);
 				String qType = qTypes.get(j);
-				tmp2.setQuestionType(qType);
 				tmp2 = tmp2.deeperCopy();
+				tmp2.setQuestionType(qType);
 				tmp2.setTree(t);
 				AnalysisUtilities.upcaseFirstToken(tmp2.getTree());
 
@@ -257,7 +257,7 @@ public class QuestionTransducer {
 			relabelPunctuationAsQuestionMark(tmp2.getTree());
 			AnalysisUtilities.upcaseFirstToken(tmp2.getTree());
 			tmp2.setAnswerPhraseTree(null);
-			tmp2.setQuestionType("y/n");
+			tmp2.setQuestionType("yes/no");
 			if(GlobalProperties.getComputeFeatures()) tmp2.setFeatureValue("isSubjectMovement", 0.0);
 			if(GlobalProperties.getComputeFeatures()) tmp2.setFeatureValue("whQuestion", 0.0);
 			if(GlobalProperties.getComputeFeatures()) QuestionFeatureExtractor.getInstance().extractFinalFeatures(tmp2);
