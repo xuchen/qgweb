@@ -40,6 +40,10 @@ public class QGSTEC2010 {
 		instanceList = new ArrayList<Instance>();
 		parser = new TestXmlParser();
 	}
+	
+	public QGSTEC2010 (String file) {
+		this(new File(file));
+	}
 
 	public QGSTEC2010 (File file) {
 		this();
@@ -249,9 +253,9 @@ public class QGSTEC2010 {
 	}
 
 	public static void main(String[] args) {
-		File file = new File("/home/xcyao/delphin/mrs.xml/QuestionsFromSentences.Test.2010.small.xml");
+		//File file = new File("/home/xcyao/delphin/mrs.xml/QuestionsFromSentences.Test.2010.small.xml");
 		//File file = new File("/home/xcyao/delphin/eval/QuestionsFromSentences.Test.2010.Saarland.xml");
-		//File file = new File("/home/xcyao/delphin/mrs.xml/QuestionsFromSentences.Development.xml");
+		File file = new File("/home/xcyao/delphin/mrs.xml/QuestionsFromSentences.Development.corrected.xml");
 		QGSTEC2010 q = new QGSTEC2010(file);
 		q.toXML(System.out);
 	}

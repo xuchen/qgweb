@@ -29,6 +29,9 @@ import java.io.*;
 //import java.text.NumberFormat;
 import java.util.*;
 
+import com.googlecode.mrsqg.evaluation.Instance;
+import com.googlecode.mrsqg.evaluation.QGSTEC2010;
+
 //import weka.classifiers.functions.LinearRegression;
 
 //import edu.cmu.ark.ranking.WekaLinearRegressionRanker;
@@ -37,19 +40,19 @@ import edu.stanford.nlp.trees.Tree;
 
 /**
  * Wrapper class for outputting a (ranked) list of questions given an entire document,
- * not just a sentence.  It wraps the three stages discussed in the technical report and calls each in turn 
+ * not just a sentence.  It wraps the three stages discussed in the technical report and calls each in turn
  * (along with parsing and other preprocessing) to produce questions.
- * 
- * This is the typical class to use for running the system via the command line. 
- * 
+ *
+ * This is the typical class to use for running the system via the command line.
+ *
  * Example usage:
- * 
+ *
     java -server -Xmx800m -cp lib/weka-3-6.jar:lib/stanford-parser-2008-10-26.jar:bin:lib/jwnl.jar:lib/commons-logging.jar:lib/commons-lang-2.4.jar:lib/supersense-tagger.jar:lib/stanford-ner-2008-05-07.jar:lib/arkref.jar \
 	edu/cmu/ark/QuestionAsker \
 	--verbose --simplify --group \
 	--model models/linear-regression-ranker-06-24-2010.ser.gz \
 	--prefer-wh --max-length 30 --downweight-pro
- * 
+ *
  * @author mheilman@cs.cmu.edu
  *
  */
@@ -58,10 +61,10 @@ public class QuestionAsker {
 
 	public QuestionAsker(){
 	}
-	
-	
-	
-	
+
+
+
+
 	/**
 	 * @param args
 	 */
@@ -69,18 +72,18 @@ public class QuestionAsker {
 		QuestionTransducer qt = new QuestionTransducer();
 		InitialTransformationStep trans = new InitialTransformationStep();
 		QuestionRanker qr = null;
-		
-		
+
+
 		qt.setAvoidPronounsAndDemonstratives(false);
-		
+
 		//pre-load
 		AnalysisUtilities.getInstance();
-		
+
 		String buf;
 		Tree parsed;
 		boolean printVerbose = false;
 		String modelPath = null;
-		
+
 		List<Question> outputQuestionList = new ArrayList<Question>();
 		boolean preferWH = false;
 		boolean doNonPronounNPC = false;
@@ -90,14 +93,16 @@ public class QuestionAsker {
 		boolean avoidFreqWords = false;
 		boolean dropPro = true;
 		boolean justWH = false;
-		
+		String testInFile = "/home/xcyao/delphin/mrs.xml/QuestionsFromSentences.Development.corrected.xml",
+		testOutFile = "/home/xcyao/delphin/mrs.xml/QuestionsFromSentences.Development.qgweb.xml";
+
 		for(int i=0;i<args.length;i++){
 			if(args[i].equals("--debug")){
 				GlobalProperties.setDebug(true);
 			}else if(args[i].equals("--verbose")){
 				printVerbose = true;
 			}else if(args[i].equals("--model")){ //ranking model path
-				modelPath = args[i+1]; 
+				modelPath = args[i+1];
 				i++;
 			}else if(args[i].equals("--keep-pro")){
 				dropPro = false;
@@ -106,135 +111,241 @@ public class QuestionAsker {
 				downweightPronouns = true;
 			}else if(args[i].equals("--downweight-frequent-answers")){
 				avoidFreqWords = true;
-			}else if(args[i].equals("--properties")){  
+			}else if(args[i].equals("--properties")){
 				GlobalProperties.loadProperties(args[i+1]);
-			}else if(args[i].equals("--prefer-wh")){  
+			}else if(args[i].equals("--prefer-wh")){
 				preferWH = true;
-			}else if(args[i].equals("--just-wh")){  
+			}else if(args[i].equals("--just-wh")){
 				justWH = true;
-			}else if(args[i].equals("--full-npc")){  
+			}else if(args[i].equals("--full-npc")){
 				doNonPronounNPC = true;
-			}else if(args[i].equals("--no-npc")){  
+			}else if(args[i].equals("--no-npc")){
 				doPronounNPC = false;
-			}else if(args[i].equals("--max-length")){  
+			}else if(args[i].equals("--max-length")){
 				maxLength = new Integer(args[i+1]);
+				i++;
+			}else if(args[i].equals("--test-in")){
+				testInFile = args[i+1];
+				i++;
+			}else if(args[i].equals("--test-out")){
+				testOutFile = args[i+1];
 				i++;
 			}
 		}
-		
+
 		qt.setAvoidPronounsAndDemonstratives(dropPro);
 		trans.setDoPronounNPC(doPronounNPC);
 		trans.setDoNonPronounNPC(doNonPronounNPC);
-		
+
 		if(modelPath != null){
 			System.err.println("Loading question ranking models from "+modelPath+"...");
 			qr = new QuestionRanker();
 			qr.loadModel(modelPath);
 		}
-		
-		try{
-			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-			
-			if(GlobalProperties.getDebug()) System.err.println("\nInput Text:");
-			String doc;
 
-			
-			while(true){
-				outputQuestionList.clear();
-				doc = "";
-				buf = "";
-				
-				buf = br.readLine();
-				if(buf == null){
-					break;
+		if (testInFile != null && testOutFile != null) {
+
+			QGSTEC2010 QGSTEC2010processor = new QGSTEC2010(testInFile);
+
+			ArrayList<Instance> instanceList = QGSTEC2010processor.getInstanceList();
+			String text, questionType;
+			ArrayList <Question> quesList;
+			try {
+				// append
+				FileOutputStream fop=new FileOutputStream(testOutFile, true);
+				for (Instance ins:instanceList) {
+					System.err.println(ins.getIdNum());
+					text = ins.getText();
+
+					List<String> sentences = new ArrayList<String>();
+					sentences.add(text);
+
+					//iterate over each segmented sentence and generate questions
+					List<Tree> inputTrees = new ArrayList<Tree>();
+
+					for(String sentence: sentences){
+						if(GlobalProperties.getDebug()) System.err.println("Question Asker: sentence: "+sentence);
+
+						parsed = AnalysisUtilities.getInstance().parseSentence(sentence).parse;
+						inputTrees.add(parsed);
+					}
+
+					// up to here inputTrees still has a size of 0
+
+					//step 1 transformations
+					List<Question> transformationOutput = trans.transform(inputTrees);
+
+					//step 2 question transducer
+					for(Question t: transformationOutput){
+						if(GlobalProperties.getDebug()) System.err.println("Stage 2 Input: "+t.getIntermediateTree().yield().toString());
+						qt.generateQuestionsFromParse(t);
+						outputQuestionList.addAll(qt.getQuestions());
+					}
+
+					//remove duplicates
+					QuestionTransducer.removeDuplicateQuestions(outputQuestionList);
+
+					//step 3 ranking
+					if(qr != null){
+						qr.scoreGivenQuestions(outputQuestionList);
+						boolean doStemming = true;
+						QuestionRanker.adjustScores(outputQuestionList, inputTrees, avoidFreqWords, preferWH, downweightPronouns, doStemming);
+						QuestionRanker.sortQuestions(outputQuestionList, false);
+					}
+
+					// group questions by type
+					HashMap<String, ArrayList<Question>> questionByType = new HashMap<String, ArrayList<Question>>();
+					for(Question question: outputQuestionList){
+						if(question.getTree().getLeaves().size() > maxLength){
+							continue;
+						}
+						if(justWH && question.getFeatureValue("whQuestion") != 1.0){
+							continue;
+						}
+						//System.out.print(question.yield());
+						String type = question.getQuestionType();
+						if (!questionByType.containsKey(type))
+							questionByType.put(type, new ArrayList<Question>());
+						questionByType.get(type).add(question);
+					}
+						// assign generated question back
+					for (int i=0; i<ins.getQuestionTypeList().size(); i++) {
+						if (i%2==0) continue;
+						questionType = ins.getQuestionTypeList().get(i);
+						// retrieve question according to questionType
+						quesList = questionByType.get(questionType);
+						if (quesList!=null&&quesList.size()!=0) {
+							ins.addGenQuestion(quesList.get(0).yield());
+							ins.addGenQuestion(quesList.size()>1?quesList.get(1).yield():quesList.get(0).yield());
+							ins.addToCandidatesList(quesList.toString());
+						} else {
+							ins.addGenQuestion("");
+							ins.addGenQuestion("");
+							ins.addToCandidatesList("");
+						}
+					}
+					// append incrementally
+					ins.toXML(fop);
+					fop.flush();
+
 				}
-				doc += buf;
-				
-				while(br.ready()){
+
+
+				// write it overall again
+				QGSTEC2010processor.toXML(fop);
+				fop.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			System.err.println("running test done.");
+
+		} else {
+
+			try{
+				BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+				if(GlobalProperties.getDebug()) System.err.println("\nInput Text:");
+				String doc;
+
+
+				while(true){
+					outputQuestionList.clear();
+					doc = "";
+					buf = "";
+
 					buf = br.readLine();
 					if(buf == null){
 						break;
 					}
-					if(buf.matches("^.*\\S.*$")){
-						doc += buf + " ";
-					}else{
-						doc += "\n";
+					doc += buf;
+
+					while(br.ready()){
+						buf = br.readLine();
+						if(buf == null){
+							break;
+						}
+						if(buf.matches("^.*\\S.*$")){
+							doc += buf + " ";
+						}else{
+							doc += "\n";
+						}
 					}
-				}
-				if(doc.length() == 0){
-					break;
-				}
-				
-				long startTime = System.currentTimeMillis();
-				List<String> sentences = AnalysisUtilities.getSentences(doc);
-				
-				//iterate over each segmented sentence and generate questions
-				List<Tree> inputTrees = new ArrayList<Tree>();
-				
-				for(String sentence: sentences){
-					if(GlobalProperties.getDebug()) System.err.println("Question Asker: sentence: "+sentence);
-					
-					parsed = AnalysisUtilities.getInstance().parseSentence(sentence).parse;
-					inputTrees.add(parsed);
-				}
-				
-				if(GlobalProperties.getDebug()) System.err.println("Seconds Elapsed Parsing:\t"+((System.currentTimeMillis()-startTime)/1000.0));
-				
-				//step 1 transformations
-				List<Question> transformationOutput = trans.transform(inputTrees);
-				
-				//step 2 question transducer
-				for(Question t: transformationOutput){
-					if(GlobalProperties.getDebug()) System.err.println("Stage 2 Input: "+t.getIntermediateTree().yield().toString());
-					qt.generateQuestionsFromParse(t);
-					outputQuestionList.addAll(qt.getQuestions());
-				}			
-				
-				//remove duplicates
-				QuestionTransducer.removeDuplicateQuestions(outputQuestionList);
-				
-				//step 3 ranking
-				if(qr != null){
-					qr.scoreGivenQuestions(outputQuestionList);
-					boolean doStemming = true;
-					QuestionRanker.adjustScores(outputQuestionList, inputTrees, avoidFreqWords, preferWH, downweightPronouns, doStemming);
-					QuestionRanker.sortQuestions(outputQuestionList, false);
-				}
-				
-				//now print the questions
-				//double featureValue;
-				for(Question question: outputQuestionList){
-					if(question.getTree().getLeaves().size() > maxLength){
-						continue;
+					if(doc.length() == 0){
+						break;
 					}
-					if(justWH && question.getFeatureValue("whQuestion") != 1.0){
-						continue;
+
+					long startTime = System.currentTimeMillis();
+					List<String> sentences = AnalysisUtilities.getSentences(doc);
+
+					//iterate over each segmented sentence and generate questions
+					List<Tree> inputTrees = new ArrayList<Tree>();
+
+					for(String sentence: sentences){
+						if(GlobalProperties.getDebug()) System.err.println("Question Asker: sentence: "+sentence);
+
+						parsed = AnalysisUtilities.getInstance().parseSentence(sentence).parse;
+						inputTrees.add(parsed);
 					}
-					System.out.print(question.yield());
-					if(printVerbose) System.out.print("\t"+AnalysisUtilities.getCleanedUpYield(question.getSourceTree()));
-					Tree ansTree = question.getAnswerPhraseTree();
-					if(printVerbose) System.out.print("\t");
-					if(ansTree != null){
-						if(printVerbose) System.out.print(AnalysisUtilities.getCleanedUpYield(question.getAnswerPhraseTree()));
+
+					if(GlobalProperties.getDebug()) System.err.println("Seconds Elapsed Parsing:\t"+((System.currentTimeMillis()-startTime)/1000.0));
+
+					//step 1 transformations
+					List<Question> transformationOutput = trans.transform(inputTrees);
+
+					//step 2 question transducer
+					for(Question t: transformationOutput){
+						if(GlobalProperties.getDebug()) System.err.println("Stage 2 Input: "+t.getIntermediateTree().yield().toString());
+						qt.generateQuestionsFromParse(t);
+						outputQuestionList.addAll(qt.getQuestions());
 					}
-					if(printVerbose) System.out.print("\t"+question.getScore());
-					//System.err.println("Answer depth: "+question.getFeatureValue("answerDepth"));
-					
-					System.out.println();
+
+					//remove duplicates
+					QuestionTransducer.removeDuplicateQuestions(outputQuestionList);
+
+					//step 3 ranking
+					if(qr != null){
+						qr.scoreGivenQuestions(outputQuestionList);
+						boolean doStemming = true;
+						QuestionRanker.adjustScores(outputQuestionList, inputTrees, avoidFreqWords, preferWH, downweightPronouns, doStemming);
+						QuestionRanker.sortQuestions(outputQuestionList, false);
+					}
+
+					//now print the questions
+					//double featureValue;
+					for(Question question: outputQuestionList){
+						if(question.getTree().getLeaves().size() > maxLength){
+							continue;
+						}
+						if(justWH && question.getFeatureValue("whQuestion") != 1.0){
+							continue;
+						}
+						System.out.print(question.yield());
+						if(printVerbose) System.out.print("\t"+AnalysisUtilities.getCleanedUpYield(question.getSourceTree()));
+						Tree ansTree = question.getAnswerPhraseTree();
+						if(printVerbose) System.out.print("\t");
+						if(ansTree != null){
+							if(printVerbose) System.out.print(AnalysisUtilities.getCleanedUpYield(question.getAnswerPhraseTree()));
+						}
+						if(printVerbose) System.out.print("\t"+question.getScore());
+						//System.err.println("Answer depth: "+question.getFeatureValue("answerDepth"));
+
+						System.out.println();
+					}
+
+					if(GlobalProperties.getDebug()) System.err.println("Seconds Elapsed Total:\t"+((System.currentTimeMillis()-startTime)/1000.0));
+					//prompt for another piece of input text
+					if(GlobalProperties.getDebug()) System.err.println("\nInput Text:");
 				}
-			
-				if(GlobalProperties.getDebug()) System.err.println("Seconds Elapsed Total:\t"+((System.currentTimeMillis()-startTime)/1000.0));
-				//prompt for another piece of input text 
-				if(GlobalProperties.getDebug()) System.err.println("\nInput Text:");
+
+
+
+
+			}catch(Exception e){
+				e.printStackTrace();
 			}
-			
-			
-			
-			
-		}catch(Exception e){
-			e.printStackTrace();
 		}
 	}
+
 
 	public static void printFeatureNames(){
 		List<String> featureNames = Question.getFeatureNames();
@@ -246,5 +357,5 @@ public class QuestionAsker {
 		}
 		System.out.println();
 	}
-	
+
 }

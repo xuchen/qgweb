@@ -26,6 +26,7 @@ public class WhPhraseGenerator {
 
 		leftOverPrepositions = new ArrayList<String>();
 		whPhraseSubtrees = new ArrayList<String>();
+		questionTypes = new ArrayList<String>();
 
 		peoplePronouns = new HashSet<String>();
 		partitiveConstructionHeads = new HashSet<String>();
@@ -182,6 +183,7 @@ public class WhPhraseGenerator {
 		//note: we also want to ask "who is john" for "john is a man I met yesterday"
 
 		whPhraseSubtrees.add("(WHNP (WRB what))");
+		questionTypes.add("what");
 	}
 
 
@@ -225,12 +227,14 @@ public class WhPhraseGenerator {
 				|| headWord.toLowerCase().matches("^(they|them|themselves)$")) //might be a person (these aren't included in isPerson)
 		{
 			whPhraseSubtrees.add("(WHNP (WRB who))");
+			questionTypes.add("who");
 		}
 	}
 
 	protected void addIfAllowedWhen(Tree phraseToMove){
 		if(isTime(headWord, headSupersenseTag)){// && !answerPreposition.matches("on|in|at|over")){ // don't want "in when"
 			whPhraseSubtrees.add("(WHADVP (WRB when))");
+			questionTypes.add("when");
 		}
 	}
 
@@ -238,6 +242,7 @@ public class WhPhraseGenerator {
 		for (String h:this.headHypernymTagSet) {
 			h = h.replace(" ", "_");
 			whPhraseSubtrees.add("(WHNP (WDT which) (NN " + h + "))");
+			questionTypes.add("which");
 		}
 	}
 
@@ -245,6 +250,7 @@ public class WhPhraseGenerator {
 		//if(locationPrepositions.contains(answerPreposition) && isLocation()){
 		if(answerPreposition.length()>0 && answerPreposition.matches("on|in|at|over|to") && isLocation(headWord, headSupersenseTag)){
 			whPhraseSubtrees.add("(WHADVP (WRB where))");
+			questionTypes.add("where");
 		}
 	}
 
@@ -294,6 +300,7 @@ public class WhPhraseGenerator {
 
 			//result.add("(WHADJP (WRB how) (JJ many)) (NNS "+sentenceTokens.get(answerNPHeadTokenIdx)+")");
 			whPhraseSubtrees.add("(WHADJP (WRB how) (JJ many)) (NP "+ copyTree.toString() +")");
+			questionTypes.add("how many");
 		}
 	}
 
@@ -338,6 +345,7 @@ public class WhPhraseGenerator {
 				Tsurgeon.processPatternsOnTree(ops, copyTree);
 
 				whPhraseSubtrees.add("(WHNP (WP$ whose) "+ copyTree.toString()+")");
+				questionTypes.add("whose");
 			}
 		}catch(Exception e){
 			e.printStackTrace();
@@ -358,6 +366,7 @@ public class WhPhraseGenerator {
 		//clear the lists that store the possible question phrases created by this method
 		leftOverPrepositions.clear();
 		whPhraseSubtrees.clear();
+		questionTypes.clear();
 
 		setAnswer(phraseToMove, inputTreeYield);
 
@@ -452,10 +461,15 @@ public class WhPhraseGenerator {
 		return whPhraseSubtrees;
 	}
 
+	public List<String> getQuestionTypes() {
+		return this.questionTypes;
+	}
+
 	private Tree answerTree; //current answer tree that is being processed
 	private List<String> supersenseTags; //supersense tags for the sentence that is being processed
 	private List<HashSet<String>> hypernymTagsSet; // WikiNet hypernym tags
 	private List<String> sentenceTokens;
+	private List<String> questionTypes;
 	private int answerNPHeadTokenIdx;
 	private String headWord;
 	private String headSupersenseTag;
