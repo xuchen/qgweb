@@ -145,15 +145,15 @@ public class QuestionAsker {
 
 		if (testInFile != null && testOutFile != null) {
 
-			QGSTEC2010 QGSTEC2010processor = new QGSTEC2010(testInFile);
+			QGSTEC2010 QGSTEC2010processor = new QGSTEC2010(testInFile, true);
 
 			ArrayList<Instance> instanceList = QGSTEC2010processor.getInstanceList();
 			String text, questionType;
 			ArrayList <Question> quesList;
 			try {
-				// append
-				FileOutputStream fop=new FileOutputStream(testOutFile, true);
+				FileOutputStream fop=new FileOutputStream(testOutFile, false);
 				for (Instance ins:instanceList) {
+					outputQuestionList.clear();
 					System.err.println(ins.getIdNum());
 					text = ins.getText();
 

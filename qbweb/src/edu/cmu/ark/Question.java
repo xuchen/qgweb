@@ -86,14 +86,12 @@ public class Question implements Comparable<Question>, Serializable{
 	public String toString(){
 		String res = "";
 
+		if(questionType != null) res += "qType:"+questionType+"\t";
 		if(tree != null) res += tree.yield().toString();
-		res += "\t";
-		if(intermediateTree != null) res += "Intermediate:"+intermediateTree.yield().toString();
-		res += "\t";
-		if(sourceTree != null) res += "Source:"+sourceTree.yield().toString();
-
-
-
+		//res += "\t";
+		//if(intermediateTree != null) res += "Intermediate:"+intermediateTree.yield().toString();
+		//res += "\t";
+		//if(sourceTree != null) res += "Source:"+sourceTree.yield().toString();
 
 		return res;
 	}
@@ -111,6 +109,7 @@ public class Question implements Comparable<Question>, Serializable{
 
 		res.setSourceArticleName(this.sourceArticleName);
 		res.setSourceDocument(this.sourceDocument);
+		res.setQuestionType(this.questionType);
 
 		return res;
 	}
