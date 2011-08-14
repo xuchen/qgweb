@@ -93,8 +93,7 @@ public class QuestionAsker {
 		boolean avoidFreqWords = false;
 		boolean dropPro = true;
 		boolean justWH = false;
-		String testInFile = "/home/xcyao/delphin/mrs.xml/QuestionsFromSentences.Development.corrected.xml",
-		testOutFile = "/home/xcyao/delphin/mrs.xml/QuestionsFromSentences.Development.qgweb.xml";
+		String testInFile = null, testOutFile = null;
 
 		for(int i=0;i<args.length;i++){
 			if(args[i].equals("--debug")){

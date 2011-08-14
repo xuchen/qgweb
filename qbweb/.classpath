@@ -14,5 +14,9 @@
 	<classpathentry kind="lib" path="lib/bing-search-java-sdk.jar"/>
 	<classpathentry kind="lib" path="lib/gson-1.4.jar"/>
 	<classpathentry kind="lib" path="lib/xerces.jar"/>
+	<classpathentry kind="lib" path="lib/commons-math-2.0.jar"/>
+	<classpathentry kind="lib" path="lib/je-4.1.6.jar"/>
+	<classpathentry kind="lib" path="lib/prefuse.jar"/>
+	<classpathentry kind="lib" path="lib/wikinet.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

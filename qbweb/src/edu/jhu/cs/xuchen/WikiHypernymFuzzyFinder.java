@@ -21,7 +21,7 @@ import net.sourceforge.fuzzyhashmap.FuzzyHashMap;
  * @author Xuchen Yao
  *
  */
-public class WikiHypernymFuzzyFinder implements Serializable {
+public class WikiHypernymFuzzyFinder implements Serializable, HypernymFinder {
 
 	/**
 	 * ~/wikinet/WikiNet TK Distribution2$ serialver -classpath bin wikinet.access.low.xuchen.HyponymIndex
