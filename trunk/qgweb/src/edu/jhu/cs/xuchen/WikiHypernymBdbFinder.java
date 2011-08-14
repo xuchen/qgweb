@@ -50,7 +50,7 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 		}
 		if (peoplePronouns == null) {
 			peoplePronouns = new HashSet<String>();
-			String[] tokens = "its my her hers his their theirs our ours your yours i he her him me she us we you myself yourself ourselves herself himself it this that these those".split("\\s+");
+			String[] tokens = "its my her hers his their theirs our ours your yours i he her him me she us we you myself yourself ourselves herself himself it this that they these those".split("\\s+");
 			for(int i=0; i<tokens.length; i++){
 				peoplePronouns.add(tokens[i]);
 			}
@@ -113,10 +113,12 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 					// deal with plurals: Edingburgh: ports_and_harbours_of_scotland
 					ParseResult result = AnalysisUtilities.getInstance().parseSentence(hypernym);
 					List<Tree> treeList = result.parse.getLeaves();
+					System.out.println("Leaves list: " + treeList);
 					List<String> hList = new ArrayList<String>();
 					for (Tree tree:treeList) {
 						String pos = tree.label().toString();
 						String word = tree.yield().toString();
+						System.out.println(word + "/" + pos);
 						if (pos.equals("NNS"))
 							hList.add(AnalysisUtilities.getInstance().getLemma(word, pos));
 						else
@@ -125,6 +127,7 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 					hypernym = "";
 					for (String s:hList)
 						hypernym += " "+s;
+					hypernym = hypernym.substring(1);
 					hSet.add(hypernym);
 				}
 			}
