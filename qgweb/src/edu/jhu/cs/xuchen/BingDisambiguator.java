@@ -60,6 +60,15 @@ public class BingDisambiguator {
     		pmi.put(h, cHypernym*1.0/cAll);
     	}
     	List<String> sortedHypernyms = sortByValue(pmi);
+    	System.out.println("=====Disambiguate Start=====");
+    	System.out.println("Sentence: " + sentence);
+    	System.out.println("Answer: " + answer);
+    	System.out.println("Hypernyms: " + hypernymSet);
+    	System.out.println("");
+    	for (String s:sortedHypernyms) {
+	    	System.out.println(s+": "+pmi.get(s));
+    	}
+    	System.out.println("=====Disambiguate End=====");
     	return sortedHypernyms;
     }
 

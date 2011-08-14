@@ -3,8 +3,19 @@
  */
 package edu.jhu.cs.xuchen;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
+
+import edu.cmu.ark.AnalysisUtilities;
+import edu.cmu.ark.GlobalProperties;
+import edu.cmu.ark.ParseResult;
+import edu.stanford.nlp.trees.Tree;
 
 import wikinet.access.low.API.implement.WikiNet;
 import wikinet.access.low.entry.data.concept.Concept;
@@ -22,6 +33,8 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 
 	private static int id_subcat_of = -1;
 
+	private static HashSet<String> peoplePronouns = null;
+
 	public WikiHypernymBdbFinder(String param_file) {
 		if (acc != null) return;
 		PropertiesManager pm = new PropertiesManager(param_file);
@@ -35,6 +48,12 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 			e.printStackTrace();
 			System.exit(-1);
 		}
+		if (peoplePronouns == null) {
+			String[] tokens = "its my her hers his their theirs our ours your yours i he her him me she us we you myself yourself ourselves herself himself it this that these those".split("\\s+");
+			for(int i=0; i<tokens.length; i++){
+				peoplePronouns.add(tokens[i]);
+			}
+		}
 	}
 
 	/* (non-Javadoc)
@@ -42,88 +61,87 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 	 */
 	@Override
 	public HashSet<String> getHypernym(String name) {
-		HashSet<Concept> cSet = acc.getConceptsByName(name.toLowerCase(), false);
+		name = name.toLowerCase();
+		int word_count = name.split("\\s+").length;
+		HashSet<Concept> cSet = acc.getConceptsByName(name, true);
 		HashSet<String> hSet = new HashSet<String>();
+		if (peoplePronouns.contains(name)) return hSet;
 		System.out.println("NP: " + name);
+
+	    Map<Concept,Integer> distanceMap = new HashMap<Concept,Integer>();
 		for (Concept concept:cSet) {
 			if (concept == null) continue;
 			if (!concept.hasRelations()) continue;
+			String cName = concept.getOneCanonicalName("en").toLowerCase();
+			// have to store ID to avoid name collision
+			distanceMap.put(concept, Utils.LevenshteinDistance(name, cName));
+		}
+		if (distanceMap.size() == 0) return hSet;
+		//if (GlobalProperties.getDebug())
+			System.out.println("\tbefore levenshtein: " + cSet);
+
+		int lowest = Collections.min(distanceMap.values());
+
+		cSet.clear();
+		/* concepts retrieved from BDB seems to be too permissive
+		 * e.g. for 'new york' BDB even returns "pennsylvania station"
+		 * so we have to use minimal edit distance to filter out some.
+		 * the algorithm used here is to find out the set of hypernyms
+		 * with the minimum Levenshtein distance.
+		*/
+		for (Entry<Concept,Integer> entry:distanceMap.entrySet()) {
+			if (entry.getValue() == lowest && entry.getValue() < word_count) cSet.add(entry.getKey());
+		}
+		//if (GlobalProperties.getDebug())
+			System.out.println("\tafter levenshtein: " + cSet);
+
+		String hypernym;
+		for (Concept concept:cSet) {
 			String cName = concept.getOneCanonicalName("en");
-			/* concepts retrieved from BDB seems to be too permissive
-			 * e.g. for 'new york' BDB even returns "pennsylvania station"
-			 * so we have to use minimal edit distance to filter out some
-			*/
-			if (WikiHypernymBdbFinder.LevenshteinDistance(name, cName) > 2)
-					continue;
 			System.out.println("\tConcept: " + cName);
 			if (concept.hasRelationsWith(id_is_a)) {
 				for (int ID : concept.getRelationsWith(id_is_a)) {
 					Concept linked = acc.getConcept(ID);
-					hSet.add(linked.getOneCanonicalName("en"));
+					hypernym = linked.getOneCanonicalName("en");
+					/*
+					 * Wikipedia seems to contain too much info about movies and music
+					 * Dev set doesn't contain any of those, thus we hope Test set does neither
+					 */
+					if (hypernym.matches(".*[album|film|music|movie|media|culture|].*")) continue;
+
+					// deal with plurals: Edingburgh: ports_and_harbours_of_scotland
+					ParseResult result = AnalysisUtilities.getInstance().parseSentence(hypernym);
+					List<Tree> treeList = result.parse.getLeaves();
+					List<String> hList = new ArrayList<String>();
+					for (Tree tree:treeList) {
+						String pos = tree.label().toString();
+						String word = tree.yield().toString();
+						if (pos.equals("NNS"))
+							hList.add(AnalysisUtilities.getInstance().getLemma(word, pos));
+						else
+							hList.add(word);
+					}
+					hypernym = "";
+					for (String s:hList)
+						hypernym += " "+s;
+					hSet.add(hypernym);
 				}
 			}
-			if (concept.hasRelationsWith(id_subcat_of)) {
-				for (int ID : concept.getRelationsWith(id_subcat_of)) {
-					Concept linked = acc.getConcept(ID);
-					hSet.add(linked.getOneCanonicalName("en"));
-				}
-			}
+//			if (concept.hasRelationsWith(id_subcat_of)) {
+//				for (int ID : concept.getRelationsWith(id_subcat_of)) {
+//					Concept linked = acc.getConcept(ID);
+//					hSet.add(linked.getOneCanonicalName("en"));
+//				}
+//			}
 		}
 		// TODO: add disambiguation here for the most plausible hypernym
 		System.out.println(hSet);
 		return hSet;
 	}
 
-	public static int LevenshteinDistance (String s, String t) {
-		s = s.replaceAll("\\p{Punct}", " ");
-		t = t.replaceAll("\\p{Punct}", " ");
-		String[] ss = s.split("\\s+");
-		String[] tt = t.split("\\s+");
-		int m=ss.length, n=tt.length;
-		int[][] d = new int [m+1][n+1];
-		if (m==0) return n;
-		if (n==0) return m;
-		int[] slist = new int[m+1];
-		int[] tlist = new int[n+1];
-		HashMap<String, Integer> map = new HashMap<String, Integer>();
-		int idx, counter=0;
-		for (int i=0; i<m; i++) {
-			d[i][0] = i;
-			if (map.containsKey(ss[i]))
-				idx = map.get(ss[i]);
-			else {
-				idx = counter;
-				map.put(ss[i], counter++);
-			}
-			slist[i+1] = idx;
-		}
-		d[m][0] = m;
-		for (int i=0; i<n; i++) {
-			d[0][i] = i;
-			if (map.containsKey(tt[i]))
-				idx = map.get(tt[i]);
-			else {
-				idx = counter;
-				map.put(tt[i], counter++);
-			}
-			tlist[i+1] = idx;
-		}
-		d[0][n] = n;
-		for (int j=1; j<=n; j++) {
-			for (int i=1; i<=m; i++) {
-				if (slist[i] == tlist[j])
-					d[i][j] = d[i-1][j-1];
-				else {
-					d[i][j] = Math.min(Math.min(d[i-1][j]+1, d[i][j-1]+1), d[i-1][j-1]+2);
-				}
-			}
-		}
-		return d[m][n];
-	}
-
 	public static void main (String[] argv) {
-		System.out.println(WikiHypernymBdbFinder.LevenshteinDistance("new york", "the new times"));
-		System.out.println(WikiHypernymBdbFinder.LevenshteinDistance("new york", " "));
-		System.out.println(WikiHypernymBdbFinder.LevenshteinDistance("new york,", "new york"));
+		System.out.println(Utils.LevenshteinDistance("new york", "the new times"));
+		System.out.println(Utils.LevenshteinDistance("new york", " "));
+		System.out.println(Utils.LevenshteinDistance("new york,", "new york"));
 	}
 }
