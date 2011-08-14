@@ -46,6 +46,7 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 		HashSet<String> hSet = new HashSet<String>();
 		System.out.println("NP: " + name);
 		for (Concept concept:cSet) {
+			if (concept == null) continue;
 			if (!concept.hasRelations()) continue;
 			String cName = concept.getOneCanonicalName("en");
 			/* concepts retrieved from BDB seems to be too permissive
