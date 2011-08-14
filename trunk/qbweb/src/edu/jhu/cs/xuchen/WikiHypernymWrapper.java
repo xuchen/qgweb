@@ -20,18 +20,26 @@ import edu.stanford.nlp.util.IntPair;
  *
  */
 public class WikiHypernymWrapper {
+	public static enum FINDER {SMALL, FULL};
 
-	protected WikiHypernymFuzzyFinder finder;
+	protected HypernymFinder finder;
 
-	private WikiHypernymWrapper() {
-		finder = new WikiHypernymFuzzyFinder(GlobalProperties.getProperties().getProperty("hyponymData", "models"+File.separator+"hyponym.500.ser.gz"));
+	private WikiHypernymWrapper(FINDER f) {
+		if (f == FINDER.SMALL)
+			finder = new WikiHypernymFuzzyFinder(GlobalProperties.getProperties().getProperty("hyponymData", "models"+File.separator+"hyponym.500.ser.gz"));
+		else
+			finder = new WikiHypernymBdbFinder(GlobalProperties.getProperties().getProperty("WikiNetConfigFile", ""));
 	}
 
 	private static WikiHypernymWrapper instance;
 
 	public static WikiHypernymWrapper getInstance() {
+		String type = GlobalProperties.getProperties().getProperty("WikiNetType", "");
 		if (instance == null) {
-			instance = new WikiHypernymWrapper();
+			if (type.equals("small"))
+				instance = new WikiHypernymWrapper(FINDER.SMALL);
+			else
+				instance = new WikiHypernymWrapper(FINDER.FULL);
 		}
 		return instance;
 	}
