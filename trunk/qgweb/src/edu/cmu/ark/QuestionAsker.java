@@ -153,7 +153,7 @@ public class QuestionAsker {
 				FileOutputStream fop=new FileOutputStream(testOutFile, false);
 				for (Instance ins:instanceList) {
 					outputQuestionList.clear();
-					System.err.println(ins.getIdNum());
+					System.err.println("Sentence: " + ins.getIdNum());
 					text = ins.getText();
 
 					List<String> sentences = new ArrayList<String>();
