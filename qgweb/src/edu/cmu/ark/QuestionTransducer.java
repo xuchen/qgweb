@@ -49,8 +49,8 @@ import edu.stanford.nlp.trees.tregex.*;
 public class QuestionTransducer {
 	public QuestionTransducer(){
 		boolean baseline = false;
-		String type = GlobalProperties.getProperties().getProperty("WikiNetType", "baseline");
-		if (type.equals("baseline"))
+		String type = GlobalProperties.getProperties().getProperty("WikiNetType", "null");
+		if (type.equals("null"))
 			baseline = true;
 		whGen = new WhPhraseGenerator(baseline);
 		numWHPhrases = 0;
