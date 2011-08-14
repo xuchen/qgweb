@@ -44,6 +44,7 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 	public HashSet<String> getHypernym(String name) {
 		HashSet<Concept> cSet = acc.getConceptsByName(name.toLowerCase(), false);
 		HashSet<String> hSet = new HashSet<String>();
+		System.out.println("NP: " + name);
 		for (Concept concept:cSet) {
 			if (!concept.hasRelations()) continue;
 			String cName = concept.getOneCanonicalName("en");
@@ -53,6 +54,7 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 			*/
 			if (WikiHypernymBdbFinder.LevenshteinDistance(name, cName) > 2)
 					continue;
+			System.out.println("\tConcept: " + cName);
 			if (concept.hasRelationsWith(id_is_a)) {
 				for (int ID : concept.getRelationsWith(id_is_a)) {
 					Concept linked = acc.getConcept(ID);
@@ -67,6 +69,7 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 			}
 		}
 		// TODO: add disambiguation here for the most plausible hypernym
+		System.out.println(hSet);
 		return hSet;
 	}
 
