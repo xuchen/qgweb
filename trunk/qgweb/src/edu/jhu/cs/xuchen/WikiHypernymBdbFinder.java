@@ -108,17 +108,15 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 					 * Wikipedia seems to contain too much info about movies and music
 					 * Dev set doesn't contain any of those, thus we hope Test set does neither
 					 */
-					if (hypernym.matches(".*[album|film|music|movie|media|culture|].*")) continue;
+					if (hypernym.matches(".*(album|film|music|movie|media|culture)+.*")) continue;
 
 					// deal with plurals: Edingburgh: ports_and_harbours_of_scotland
 					ParseResult result = AnalysisUtilities.getInstance().parseSentence(hypernym);
 					List<Tree> treeList = result.parse.getLeaves();
-					System.out.println("Leaves list: " + treeList);
 					List<String> hList = new ArrayList<String>();
 					for (Tree tree:treeList) {
 						String pos = tree.label().toString();
 						String word = tree.yield().toString();
-						System.out.println(word + "/" + pos);
 						if (pos.equals("NNS"))
 							hList.add(AnalysisUtilities.getInstance().getLemma(word, pos));
 						else

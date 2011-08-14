@@ -54,6 +54,7 @@ public class BingDisambiguator {
     	sentence = sentence.replaceAll("and", "");
     	sentence = sentence.replaceAll("or", "");
     	HashMap<String, Double> pmi= new HashMap<String, Double>();
+    	if (hypernymSet.size() == 0) return new ArrayList<String>();
     	for (String h:hypernymSet) {
     		cHypernym = getTotalResults(h+" "+answer);
     		cAll = getTotalResults(h+" "+sentence);
