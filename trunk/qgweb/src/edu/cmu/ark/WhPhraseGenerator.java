@@ -20,8 +20,8 @@ import java.util.*;
  */
 public class WhPhraseGenerator {
 
-	public WhPhraseGenerator(){
-
+	public WhPhraseGenerator(boolean baseline){
+		this.baseline = baseline;
 		String[] tokens;
 
 		leftOverPrepositions = new ArrayList<String>();
@@ -81,8 +81,9 @@ public class WhPhraseGenerator {
 		}
 
 		sentenceTokens = new ArrayList<String>();
-		String[] hypernymList;
-		this.hypernymTagsSet = WikiHypernymWrapper.getInstance().annotateHypernym(tmp1.getIntermediateTree());
+		if (!baseline) {
+			this.hypernymTagsSet = WikiHypernymWrapper.getInstance().annotateHypernym(tmp1.getIntermediateTree());
+		}
 		String [] origTokenArray = tmp1.getIntermediateTree().yield().toString().split("\\s");
 		for(int i=0; i<origTokenArray.length; i++){
 			sentenceTokens.add(origTokenArray[i]);
@@ -165,8 +166,10 @@ public class WhPhraseGenerator {
 
 		answerNPHeadTokenIdx = start + leaves.indexOf(answerNP.headTerminal(AnalysisUtilities.getInstance().getHeadFinder()));
 		headSupersenseTag = supersenseTags.get(answerNPHeadTokenIdx);
-		this.headHypernymTagSet = this.hypernymTagsSet.get(answerNPHeadTokenIdx);
-		this.headHypernymDisambiguated = BingDisambiguator.getInstance().disambiguate(this.headHypernymTagSet, origSentence, ans.yield().toString());
+		if (!baseline) {
+			this.headHypernymTagSet = this.hypernymTagsSet.get(answerNPHeadTokenIdx);
+			this.headHypernymDisambiguated = BingDisambiguator.getInstance().disambiguate(this.headHypernymTagSet, origSentence, ans.yield().toString());
+		}
 		headWord = sentenceTokens.get(answerNPHeadTokenIdx);
 	}
 
@@ -243,10 +246,12 @@ public class WhPhraseGenerator {
 	}
 
 	protected void addIfAllowedWhich(Tree phraseToMove){
-		for (String h:this.headHypernymTagSet) {
-			h = h.replace(" ", "_");
-			whPhraseSubtrees.add("(WHNP (WDT which) (NN " + h + "))");
-			questionTypes.add("which");
+		if (!baseline) {
+			for (String h:this.headHypernymTagSet) {
+				h = h.replace(" ", "_");
+				whPhraseSubtrees.add("(WHNP (WDT which) (NN " + h + "))");
+				questionTypes.add("which");
+			}
 		}
 	}
 
@@ -488,6 +493,7 @@ public class WhPhraseGenerator {
 	private List<String> leftOverPrepositions;
 	private List<String> whPhraseSubtrees;
 	private Set<String> partitiveConstructionHeads; //words that can be the syntactic heads of partitive constructions (e.g., ONE of the most prolific quarterbacks of all time)
+	private boolean baseline;
 
 }
 

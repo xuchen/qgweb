@@ -48,7 +48,11 @@ import edu.stanford.nlp.trees.tregex.*;
  */
 public class QuestionTransducer {
 	public QuestionTransducer(){
-		whGen = new WhPhraseGenerator();
+		boolean baseline = false;
+		String type = GlobalProperties.getProperties().getProperty("WikiNetType", "baseline");
+		if (type.equals("baseline"))
+			baseline = true;
+		whGen = new WhPhraseGenerator(baseline);
 		numWHPhrases = 0;
 	}
 

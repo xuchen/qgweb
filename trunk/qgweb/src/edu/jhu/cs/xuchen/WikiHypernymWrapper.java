@@ -38,8 +38,13 @@ public class WikiHypernymWrapper {
 		if (instance == null) {
 			if (type.equals("small"))
 				instance = new WikiHypernymWrapper(FINDER.SMALL);
-			else
+			else if (type.equals("full"))
 				instance = new WikiHypernymWrapper(FINDER.FULL);
+			else {
+				System.err.println("WikiNetType in property files should be either null, small or full");
+				System.err.println("You have: " + type);
+				System.exit(-1);
+			}
 		}
 		return instance;
 	}
