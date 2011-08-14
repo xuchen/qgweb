@@ -49,6 +49,7 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 			System.exit(-1);
 		}
 		if (peoplePronouns == null) {
+			peoplePronouns = new HashSet<String>();
 			String[] tokens = "its my her hers his their theirs our ours your yours i he her him me she us we you myself yourself ourselves herself himself it this that these those".split("\\s+");
 			for(int i=0; i<tokens.length; i++){
 				peoplePronouns.add(tokens[i]);
