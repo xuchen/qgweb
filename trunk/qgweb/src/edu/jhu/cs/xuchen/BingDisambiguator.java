@@ -66,11 +66,11 @@ public class BingDisambiguator {
     		cAll = getTotalResults(h+" "+sentence);
     		p = cHypernym*1.0/cAll;
     		pmi.put(h, p);
-    		System.out.println(String.format("[Hypernym+Answer] Hypernym/cHypernym/cAll/pmi: %s/%d/%d/%d/%.2f", h, cHypernym, cAll,  p));
+    		System.out.println(String.format("[Hypernym+Answer] Hypernym/cHypernym/cAll/pmi: %s/%d/%d/%.2f", h, cHypernym, cAll,  p));
     		cHypernym = getTotalResults(h);
     		p = cHypernym*1.0/cAll;
     		pmi1.put(h, p);
-    		System.out.println(String.format("[Hypernym   Only] Hypernym/cHypernym/cAll/pmi: %s/%d/%d/%d/%.2f", h, cHypernym, cAll,  p));
+    		System.out.println(String.format("[Hypernym   Only] Hypernym/cHypernym/cAll/pmi: %s/%d/%d/%.2f", h, cHypernym, cAll,  p));
     	}
     	System.out.println("");
     	List<String> sortedHypernyms = sortByValue(pmi);
