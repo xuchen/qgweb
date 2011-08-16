@@ -113,12 +113,13 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 
 					// deal with plurals: Edingburgh: ports_and_harbours_of_scotland
 					ParseResult result = AnalysisUtilities.getInstance().parseSentence(hypernym);
-					List<Tree> treeList = result.parse.getLeaves();
+					List<Tree> leaves = result.parse.getLeaves();
 					List<String> hList = new ArrayList<String>();
-					System.out.println("Leaves: " + treeList);
-					for (Tree tree:treeList) {
-						String pos = tree.label().toString();
-						String word = tree.yield().toString();
+					System.out.println("Leaves: " + leaves);
+					for (int i=0; i<leaves.size(); i++) {
+						String word = leaves.get(i).label().toString();
+						Tree preterm = leaves.get(i).parent(result.parse);
+						String pos = preterm.label().toString();
 						String lemma = word;
 						if (pos.equals("NNS")) {
 							lemma = AnalysisUtilities.getInstance().getLemma(word, pos);
@@ -126,7 +127,7 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 						}
 						else
 							hList.add(word);
-						System.out.println(word + "/" + pos + "/" + lemma);
+						System.out.println(word + "/" + pos);
 					}
 					hypernym = "";
 					for (String s:hList)
