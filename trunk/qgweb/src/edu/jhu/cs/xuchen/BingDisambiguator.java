@@ -51,25 +51,39 @@ public class BingDisambiguator {
 
     public List<String> disambiguate(HashSet<String> hypernymSet, String sentence, String answer) {
     	long cHypernym, cAll;
-    	sentence = sentence.replaceAll("and", "");
-    	sentence = sentence.replaceAll("or", "");
+    	Double p;
+    	sentence = sentence.replaceAll(" and ", "");
+    	sentence = sentence.replaceAll(" or ", "");
     	HashMap<String, Double> pmi= new HashMap<String, Double>();
+    	HashMap<String, Double> pmi1= new HashMap<String, Double>();
     	if (hypernymSet.size() == 0) return new ArrayList<String>();
-    	for (String h:hypernymSet) {
-    		cHypernym = getTotalResults(h+" "+answer);
-    		cAll = getTotalResults(h+" "+sentence);
-    		pmi.put(h, cHypernym*1.0/cAll);
-    	}
-    	List<String> sortedHypernyms = sortByValue(pmi);
     	System.out.println("=====Disambiguate Start=====");
     	System.out.println("Sentence: " + sentence);
     	System.out.println("Answer: " + answer);
     	System.out.println("Hypernyms: " + hypernymSet);
-    	System.out.println("");
-    	for (String s:sortedHypernyms) {
-	    	System.out.println(s+": "+pmi.get(s));
+    	for (String h:hypernymSet) {
+    		cHypernym = getTotalResults(h+" "+answer);
+    		cAll = getTotalResults(h+" "+sentence);
+    		p = cHypernym*1.0/cAll;
+    		pmi.put(h, p);
+    		System.out.println(String.format("[Hypernym+Answer] Hypernym/cHypernym/cAll/pmi: %s/%d/%d/%d/%.2f", h, cHypernym, cAll,  p));
+    		cHypernym = getTotalResults(h);
+    		p = cHypernym*1.0/cAll;
+    		pmi1.put(h, p);
+    		System.out.println(String.format("[Hypernym   Only] Hypernym/cHypernym/cAll/pmi: %s/%d/%d/%d/%.2f", h, cHypernym, cAll,  p));
     	}
-    	System.out.println("=====Disambiguate End=====");
+    	System.out.println("");
+    	List<String> sortedHypernyms = sortByValue(pmi);
+    	System.out.println("[Hypernym+Answer]");
+    	for (String s:sortedHypernyms) {
+	    	System.out.print(s+": "+pmi.get(s)+"\t");
+    	}
+    	List<String> sortedHypernyms1 = sortByValue(pmi1);
+    	System.out.println("[Hypernym   Only]");
+    	for (String s:sortedHypernyms1) {
+	    	System.out.print(s+": "+pmi1.get(s)+"\t");
+    	}
+    	System.out.println("\n=====Disambiguate End=====");
     	return sortedHypernyms;
     }
 

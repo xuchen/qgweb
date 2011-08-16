@@ -64,7 +64,7 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 	public HashSet<String> getHypernym(String name) {
 		name = name.toLowerCase();
 		int word_count = name.split("\\s+").length;
-		HashSet<Concept> cSet = acc.getConceptsByName(name, true);
+		HashSet<Concept> cSet = acc.getConceptsByName(name, false);
 		HashSet<String> hSet = new HashSet<String>();
 		if (peoplePronouns.contains(name)) return hSet;
 		System.out.println("NP: " + name);
@@ -73,6 +73,7 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 		for (Concept concept:cSet) {
 			if (concept == null) continue;
 			if (!concept.hasRelations()) continue;
+			if (!concept.isNE()) continue;
 			String cName = concept.getOneCanonicalName("en").toLowerCase();
 			// have to store ID to avoid name collision
 			distanceMap.put(concept, Utils.LevenshteinDistance(name, cName));
@@ -114,13 +115,18 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 					ParseResult result = AnalysisUtilities.getInstance().parseSentence(hypernym);
 					List<Tree> treeList = result.parse.getLeaves();
 					List<String> hList = new ArrayList<String>();
+					System.out.println("Leaves: " + treeList);
 					for (Tree tree:treeList) {
 						String pos = tree.label().toString();
 						String word = tree.yield().toString();
-						if (pos.equals("NNS"))
-							hList.add(AnalysisUtilities.getInstance().getLemma(word, pos));
+						String lemma = word;
+						if (pos.equals("NNS")) {
+							lemma = AnalysisUtilities.getInstance().getLemma(word, pos);
+							hList.add(lemma);
+						}
 						else
 							hList.add(word);
+						System.out.println(word + "/" + pos + "/" + lemma);
 					}
 					hypernym = "";
 					for (String s:hList)
