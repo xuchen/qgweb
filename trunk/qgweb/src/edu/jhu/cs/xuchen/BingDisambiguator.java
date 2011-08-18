@@ -50,27 +50,36 @@ public class BingDisambiguator {
     }
 
     public List<String> disambiguate(HashSet<String> hypernymSet, String sentence, String answer) {
-    	long cHypernym, cAll;
+    	long cHypernymContext, cAll;
     	Double p;
+    	String context = sentence.replaceAll(answer, "").replaceAll(" and ", "").replaceAll(" or ", "");
     	sentence = sentence.replaceAll(" and ", "");
     	sentence = sentence.replaceAll(" or ", "");
     	HashMap<String, Double> pmi= new HashMap<String, Double>();
     	HashMap<String, Double> pmi1= new HashMap<String, Double>();
+    	HashMap<String, Double> pmi2= new HashMap<String, Double>();
     	if (hypernymSet.size() == 0) return new ArrayList<String>();
     	System.out.println("=====Disambiguate Start=====");
     	System.out.println("Sentence: " + sentence);
+    	System.out.println("Context: " + context);
     	System.out.println("Answer: " + answer);
     	System.out.println("Hypernyms: " + hypernymSet);
+		answer = "\"" + answer + "\"";
     	for (String h:hypernymSet) {
-    		cHypernym = getTotalResults(h+" "+answer);
-    		cAll = getTotalResults(h+" "+sentence);
-    		p = cHypernym*1.0/cAll;
+    		h = "\"" + h + "\"";
+    		cHypernymContext = getTotalResults(h+" "+context);
+    		cAll = getTotalResults(answer+" near:10 "+h+ " " + context);
+    		p = cHypernymContext*1.0/cAll;
     		pmi.put(h, p);
-    		System.out.println(String.format("[Hypernym+Answer] Hypernym/cHypernym/cAll/pmi: %s/%d/%d/%.2f", h, cHypernym, cAll,  p));
-    		cHypernym = getTotalResults(h);
-    		p = cHypernym*1.0/cAll;
+    		System.out.println(String.format("[near:10] Hypernym/cHypernym/cAll/pmi: %s/%d/%d/%.2f", h, cHypernymContext, cAll,  p));
+    		cAll = getTotalResults(answer+" near:20 "+h+ " " + context);
+    		p = cHypernymContext*1.0/cAll;
     		pmi1.put(h, p);
-    		System.out.println(String.format("[Hypernym   Only] Hypernym/cHypernym/cAll/pmi: %s/%d/%d/%.2f", h, cHypernym, cAll,  p));
+    		System.out.println(String.format("[near:20] Hypernym/cHypernym/cAll/pmi: %s/%d/%d/%.2f", h, cHypernymContext, cAll,  p));
+    		cAll = getTotalResults(answer+" near:30 "+h+ " " + context);
+    		p = cHypernymContext*1.0/cAll;
+    		pmi2.put(h, p);
+    		System.out.println(String.format("[near:30] Hypernym/cHypernym/cAll/pmi: %s/%d/%d/%.2f", h, cHypernymContext, cAll,  p));
     	}
     	System.out.println("");
     	List<String> sortedHypernyms = sortByValue(pmi);
@@ -83,8 +92,13 @@ public class BingDisambiguator {
     	for (String s:sortedHypernyms1) {
 	    	System.out.print(s+": "+pmi1.get(s)+"\t");
     	}
+    	List<String> sortedHypernyms2 = sortByValue(pmi2);
+    	System.out.println("[Hypernym   Only]");
+    	for (String s:sortedHypernyms2) {
+	    	System.out.print(s+": "+pmi2.get(s)+"\t");
+    	}
     	System.out.println("\n=====Disambiguate End=====");
-    	return sortedHypernyms;
+    	return sortedHypernyms1;
     }
 
     private static long getTotalResults (String query) {
