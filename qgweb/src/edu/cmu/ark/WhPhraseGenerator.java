@@ -168,7 +168,22 @@ public class WhPhraseGenerator {
 		headSupersenseTag = supersenseTags.get(answerNPHeadTokenIdx);
 		if (!baseline) {
 			this.headHypernymTagSet = this.hypernymTagsSet.get(answerNPHeadTokenIdx);
-			this.headHypernymDisambiguated = BingDisambiguator.getInstance().disambiguate(this.headHypernymTagSet, origSentence, ans.yield().toString());
+			boolean whole_match = true;
+			for (int i=start; i<=end; i++) {
+				/*
+				 * ofttimes NE matcher matches "Scotland" but ans is "in Scotland"
+				 * in this case we don't disambiguate since "location" is not a hypernym
+				 * of "in Scotland" but "Scotland"
+				 */
+				if (this.hypernymTagsSet.get(i) != this.headHypernymTagSet) {
+					whole_match = false;
+					break;
+				}
+			}
+			if (whole_match)
+				this.headHypernymDisambiguated = BingDisambiguator.getInstance().disambiguate(this.headHypernymTagSet, origSentence, ans.yield().toString());
+			else
+				this.headHypernymDisambiguated = new ArrayList<String>();
 		}
 		headWord = sentenceTokens.get(answerNPHeadTokenIdx);
 	}
@@ -247,7 +262,7 @@ public class WhPhraseGenerator {
 
 	protected void addIfAllowedWhich(Tree phraseToMove){
 		if (!baseline) {
-			for (String h:this.headHypernymTagSet) {
+			for (String h:this.headHypernymDisambiguated) {
 				h = h.replace(" ", "_");
 				whPhraseSubtrees.add("(WHNP (WDT which) (NN " + h + "))");
 				questionTypes.add("which");
