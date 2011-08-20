@@ -182,8 +182,10 @@ public class WhPhraseGenerator {
 			}
 			if (whole_match)
 				this.headHypernymDisambiguated = BingDisambiguator.getInstance().disambiguate(this.headHypernymTagSet, origSentence, ans.yield().toString());
-			else
+			else {
+				System.out.println("Not a whole match: "+ans.yield().toString()+" HEAD: "+answerTokenArray[answerNPHeadTokenIdx]);
 				this.headHypernymDisambiguated = new ArrayList<String>();
+			}
 		}
 		headWord = sentenceTokens.get(answerNPHeadTokenIdx);
 	}
@@ -246,8 +248,8 @@ public class WhPhraseGenerator {
 		{
 			whPhraseSubtrees.add("(WHNP (WRB who))");
 			questionTypes.add("who");
-			whPhraseSubtrees.add("(WHNP (WDT which) (NN person))");
-			questionTypes.add("which");
+			//whPhraseSubtrees.add("(WHNP (WDT which) (NN person))");
+			//questionTypes.add("which");
 		}
 	}
 
@@ -255,8 +257,8 @@ public class WhPhraseGenerator {
 		if(isTime(headWord, headSupersenseTag)){// && !answerPreposition.matches("on|in|at|over")){ // don't want "in when"
 			whPhraseSubtrees.add("(WHADVP (WRB when))");
 			questionTypes.add("when");
-			whPhraseSubtrees.add("(WHNP (WDT which) (NN time))");
-			questionTypes.add("which");
+			//whPhraseSubtrees.add("(WHNP (WDT which) (NN time))");
+			//questionTypes.add("which");
 		}
 	}
 
@@ -275,8 +277,8 @@ public class WhPhraseGenerator {
 		if(answerPreposition.length()>0 && answerPreposition.matches("on|in|at|over|to") && isLocation(headWord, headSupersenseTag)){
 			whPhraseSubtrees.add("(WHADVP (WRB where))");
 			questionTypes.add("where");
-			whPhraseSubtrees.add("(WHNP (WDT which) (NN place))");
-			questionTypes.add("which");
+			//whPhraseSubtrees.add("(WHNP (WDT which) (NN place))");
+			//questionTypes.add("which");
 		}
 	}
 
