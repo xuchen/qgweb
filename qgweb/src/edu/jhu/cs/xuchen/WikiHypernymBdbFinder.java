@@ -3,6 +3,10 @@
  */
 package edu.jhu.cs.xuchen;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -11,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.zip.GZIPInputStream;
 
 import edu.cmu.ark.AnalysisUtilities;
 import edu.cmu.ark.GlobalProperties;
@@ -34,6 +39,7 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 	private static int id_subcat_of = -1;
 
 	private static HashSet<String> peoplePronouns = null;
+	private static HashSet<String> hypernymWordnetSet = null;
 
 	public WikiHypernymBdbFinder(String param_file) {
 		if (acc != null) return;
@@ -55,6 +61,29 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 				peoplePronouns.add(tokens[i]);
 			}
 		}
+		if (hypernymWordnetSet == null) {
+			String hfile = GlobalProperties.getProperties().getProperty("hypernymList", "");
+			if (hfile != null) {
+				hypernymWordnetSet = new HashSet<String>();
+			    FileInputStream fin;
+				try {
+					fin = new FileInputStream(hfile);
+			    GZIPInputStream gzis = new GZIPInputStream(fin);
+			    InputStreamReader xover = new InputStreamReader(gzis);
+			    BufferedReader is = new BufferedReader(xover);
+
+			    String line;
+			    // Now read lines of text: the BufferedReader puts them in lines,
+			    // the InputStreamReader does Unicode conversion, and the
+			    // GZipInputStream "gunzip"s the data from the FileInputStream.
+			    while ((line = is.readLine()) != null)
+			    	hypernymWordnetSet.add(line.toLowerCase());
+				} catch (Exception e) {
+					e.printStackTrace();
+					System.exit(-1);
+				}
+			  }
+			}
 	}
 
 	/* (non-Javadoc)
@@ -116,6 +145,8 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 					List<Tree> leaves = result.parse.getLeaves();
 					List<String> hList = new ArrayList<String>();
 					System.out.println("Leaves: " + leaves);
+					Tree head = result.parse.headTerminal(AnalysisUtilities.getInstance().getHeadFinder());
+					String headWord = head.yield().toString();
 					for (int i=0; i<leaves.size(); i++) {
 						String word = leaves.get(i).label().toString();
 						Tree preterm = leaves.get(i).parent(result.parse);
@@ -124,6 +155,9 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 						if (pos.equals("NNS")) {
 							lemma = AnalysisUtilities.getInstance().getLemma(word, pos);
 							hList.add(lemma);
+							if (headWord.startsWith(lemma))
+								// incase the head word is plural
+								headWord = lemma;
 						}
 						else
 							hList.add(word);
@@ -133,7 +167,11 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 					for (String s:hList)
 						hypernym += " "+s;
 					hypernym = hypernym.substring(1);
-					hSet.add(hypernym);
+					if (hypernymWordnetSet != null && hypernymWordnetSet.contains(headWord))
+						hSet.add(hypernym);
+					else {
+						System.out.println("Hypernym excluded: " + hypernym + "HEAD: " + head);
+					}
 				}
 			}
 //			if (concept.hasRelationsWith(id_subcat_of)) {

@@ -33,7 +33,7 @@ import net.didion.jwnl.dictionary.Dictionary;
 public class VerbConjugator {
 
 
-	
+
 	public VerbConjugator(){
 		baseFormCountMap = new HashMap<String, Long>();
 		conjugationMap = new HashMap<String, String>();
@@ -43,33 +43,33 @@ public class VerbConjugator {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void save(String filePath){
 		try{
 			PrintWriter pw = new PrintWriter(new FileOutputStream(filePath));
 			for(Map.Entry<String, String> entry: conjugationMap.entrySet()){
 				String key = entry.getKey();
-				String[] parts = key.split("/"); 
+				String[] parts = key.split("/");
 				String token = entry.getValue();
 				pw.println(parts[0]+"\t"+parts[1]+"\t"+token);
 			}
-			
+
 			pw.println("*");
-			
+
 			for(Map.Entry<String, Long> entry: baseFormCountMap.entrySet()){
 				String key = entry.getKey();
 				Long count = entry.getValue();
 				pw.println(key+"\t"+count);
 			}
-			
+
 			pw.flush();
 			pw.close();
 		}catch(Exception e){
 			e.printStackTrace();
 		}
 	}
-	
-	
+
+
 	public void load(String filePath){
 		try{
 			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath)));
@@ -102,7 +102,7 @@ public class VerbConjugator {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public String getSurfaceForm(String lemma, String pos){
 		String result = new String(lemma);
 		String key = lemma + "/" + pos;
@@ -111,10 +111,10 @@ public class VerbConjugator {
 		}else if(pos.equals("VBD") || pos.equals("VBZ")){
 			if(!lemma.matches("^.*[aieou]$")){
 //			char lastChar = lemma.charAt(lemma.length()-1);
-//			if(lastChar == 'a' 
-//				|| lastChar == 'e' 
-//				|| lastChar == 'i' 
-//				|| lastChar == 'o' 
+//			if(lastChar == 'a'
+//				|| lastChar == 'e'
+//				|| lastChar == 'i'
+//				|| lastChar == 'o'
 //				|| lastChar == 'u')
 //			{
 				result += "e";
@@ -125,20 +125,20 @@ public class VerbConjugator {
 				result += "s";
 			}
 		}
-		
+
 		return result;
 	}
-	
-	
+
+
 	public int getBaseFormCount(String lemma){
 		Long result = baseFormCountMap.get(lemma);
 		if(result == null){
 			result = new Long(0);
 		}
-		
+
 		return result.intValue();
 	}
-	
+
 	public void readFromTreebankFile(String path){
 		try{
 			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(path)));
@@ -167,44 +167,66 @@ public class VerbConjugator {
 						}catch(Exception e){
 							e.printStackTrace();
 						}
-						
+
 						String key = lemma+"/"+pos;
 						System.err.println("adding\t"+key+"\t"+token);
 						conjugationMap.put(key, token);
 					}
 				}
-				
+
 			}
 		}catch(Exception e){
 			e.printStackTrace();
 		}
 	}
-	
-	
-	
+
+
+	public void printHypernyms() {
+		try {
+			HashSet<String> hset = new HashSet<String>();
+			Iterator<Synset> ite = Dictionary.getInstance().getSynsetIterator(POS.NOUN);
+			while (ite.hasNext()) {
+				Synset s = ite.next();
+				for (Pointer x:s.getPointers(PointerType.HYPERNYM)) {
+					for (Word w:x.getTargetSynset().getWords()) {
+						String lemma = w.getLemma();
+						if (!hset.contains(lemma)) {
+							hset.add(lemma);
+							System.out.println(lemma.replaceAll("_", " "));
+						}
+					}
+				}
+			}
+		} catch (JWNLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
 		VerbConjugator vc = new VerbConjugator();
-		vc.readFromTreebankFile(args[0]);
-		vc.save("verbConjugations.txt");
-		
-		//vc.load("verbConjugations.txt");
-		
-		System.err.println(vc.getSurfaceForm("walk", "VBZ"));
-		System.err.println(vc.getSurfaceForm("walk", "VBD"));
-		System.err.println(vc.getSurfaceForm("alleviate", "VBZ"));
-		System.err.println(vc.getSurfaceForm("alleviate", "VBD"));
-		System.err.println(vc.getBaseFormCount("walk"));
-		System.err.println(vc.getBaseFormCount("alleviate"));
+//		vc.readFromTreebankFile(args[0]);
+//		vc.save("verbConjugations.txt");
+//
+//		//vc.load("verbConjugations.txt");
+//
+//		System.err.println(vc.getSurfaceForm("walk", "VBZ"));
+//		System.err.println(vc.getSurfaceForm("walk", "VBD"));
+//		System.err.println(vc.getSurfaceForm("alleviate", "VBZ"));
+//		System.err.println(vc.getSurfaceForm("alleviate", "VBD"));
+//		System.err.println(vc.getBaseFormCount("walk"));
+//		System.err.println(vc.getBaseFormCount("alleviate"));
+		vc.printHypernyms();
 	}
 
-	
+
 	//map from lemma+pos to surface form (e.g., walk+VBZ => walks)
 	Map<String, String> conjugationMap;
-	
+
 	Map<String, Long> baseFormCountMap;
 
-	
+
 }
