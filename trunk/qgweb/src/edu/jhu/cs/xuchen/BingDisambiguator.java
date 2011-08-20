@@ -65,21 +65,48 @@ public class BingDisambiguator {
     	System.out.println("Answer: " + answer);
     	System.out.println("Hypernyms: " + hypernymSet);
 		answer = "\"" + answer + "\"";
+//    	for (String h:hypernymSet) {
+//    		h = "\"" + h + "\"";
+//    		cHypernymContext = getTotalResults(h+" "+context);
+//    		// cAll should be less than cHypernymContext!
+//    		cAll = getTotalResults(answer+" near:10 "+h+ " " + context);
+//    		if (cAll > cHypernymContext) continue;
+//    		p = cHypernymContext*1.0/cAll;
+//    		pmi.put(h, p);
+//    		System.out.println(String.format("[near:10] Hypernym/cHypernym/cAll/pmi: %s/%d/%d/%.2f", h, cHypernymContext, cAll,  p));
+//    		cAll = getTotalResults(answer+" near:20 "+h+ " " + context);
+//    		p = cHypernymContext*1.0/cAll;
+//    		pmi1.put(h, p);
+//    		System.out.println(String.format("[near:20] Hypernym/cHypernym/cAll/pmi: %s/%d/%d/%.2f", h, cHypernymContext, cAll,  p));
+//    		cAll = getTotalResults(answer+" near:30 "+h+ " " + context);
+//    		p = cHypernymContext*1.0/cAll;
+//    		pmi2.put(h, p);
+//    		System.out.println(String.format("[near:30] Hypernym/cHypernym/cAll/pmi: %s/%d/%d/%.2f", h, cHypernymContext, cAll,  p));
+//    	}
+//    	System.out.println("");
+//    	List<String> sortedHypernyms = sortByValue(pmi);
+//    	System.out.println("[Hypernym+Answer]");
+//    	for (String s:sortedHypernyms) {
+//	    	System.out.print(s+": "+pmi.get(s)+"\t");
+//    	}
+//    	List<String> sortedHypernyms1 = sortByValue(pmi1);
+//    	System.out.println("[Hypernym   Only]");
+//    	for (String s:sortedHypernyms1) {
+//	    	System.out.print(s+": "+pmi1.get(s)+"\t");
+//    	}
+//    	List<String> sortedHypernyms2 = sortByValue(pmi2);
+//    	System.out.println("[Hypernym   Only]");
+//    	for (String s:sortedHypernyms2) {
+//	    	System.out.print(s+": "+pmi2.get(s)+"\t");
+//    	}
     	for (String h:hypernymSet) {
-    		h = "\"" + h + "\"";
+    		//h = "\"" + h + "\"";
     		cHypernymContext = getTotalResults(h+" "+context);
-    		cAll = getTotalResults(answer+" near:10 "+h+ " " + context);
+    		// cAll should be less than cHypernymContext!
+    		cAll = getTotalResults(answer+h+ " " + context);
     		p = cHypernymContext*1.0/cAll;
     		pmi.put(h, p);
-    		System.out.println(String.format("[near:10] Hypernym/cHypernym/cAll/pmi: %s/%d/%d/%.2f", h, cHypernymContext, cAll,  p));
-    		cAll = getTotalResults(answer+" near:20 "+h+ " " + context);
-    		p = cHypernymContext*1.0/cAll;
-    		pmi1.put(h, p);
-    		System.out.println(String.format("[near:20] Hypernym/cHypernym/cAll/pmi: %s/%d/%d/%.2f", h, cHypernymContext, cAll,  p));
-    		cAll = getTotalResults(answer+" near:30 "+h+ " " + context);
-    		p = cHypernymContext*1.0/cAll;
-    		pmi2.put(h, p);
-    		System.out.println(String.format("[near:30] Hypernym/cHypernym/cAll/pmi: %s/%d/%d/%.2f", h, cHypernymContext, cAll,  p));
+    		System.out.println(String.format("Hypernym/cHypernym/cAll/pmi: %s/%d/%d/%.2f", h, cHypernymContext, cAll,  p));
     	}
     	System.out.println("");
     	List<String> sortedHypernyms = sortByValue(pmi);
@@ -87,18 +114,8 @@ public class BingDisambiguator {
     	for (String s:sortedHypernyms) {
 	    	System.out.print(s+": "+pmi.get(s)+"\t");
     	}
-    	List<String> sortedHypernyms1 = sortByValue(pmi1);
-    	System.out.println("[Hypernym   Only]");
-    	for (String s:sortedHypernyms1) {
-	    	System.out.print(s+": "+pmi1.get(s)+"\t");
-    	}
-    	List<String> sortedHypernyms2 = sortByValue(pmi2);
-    	System.out.println("[Hypernym   Only]");
-    	for (String s:sortedHypernyms2) {
-	    	System.out.print(s+": "+pmi2.get(s)+"\t");
-    	}
     	System.out.println("\n=====Disambiguate End=====");
-    	return sortedHypernyms1;
+    	return sortedHypernyms;
     }
 
     private static long getTotalResults (String query) {
