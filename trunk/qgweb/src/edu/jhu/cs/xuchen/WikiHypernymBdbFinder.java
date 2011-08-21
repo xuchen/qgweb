@@ -91,6 +91,7 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 	 */
 	@Override
 	public HashSet<String> getHypernym(String name) {
+		System.out.println("Orig NP: "+name);
 		name = AnalysisUtilities.getInstance().getContentWords(name);
 		System.out.println("NP: " + name);
 		name = name.toLowerCase();
