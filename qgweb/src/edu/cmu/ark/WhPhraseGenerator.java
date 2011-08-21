@@ -184,6 +184,9 @@ public class WhPhraseGenerator {
 				this.headHypernymDisambiguated = BingDisambiguator.getInstance().disambiguate(this.headHypernymTagSet, origSentence, ans.yield().toString());
 			else {
 				System.out.println("Not a whole match: "+ans.yield().toString()+" HEAD: "+sentenceTokens.get(answerNPHeadTokenIdx));
+				for (int i=start; i<=end; i++) {
+					System.out.println("\t"+i+": "+this.hypernymTagsSet.get(i));
+				}
 				this.headHypernymDisambiguated = new ArrayList<String>();
 			}
 		}
