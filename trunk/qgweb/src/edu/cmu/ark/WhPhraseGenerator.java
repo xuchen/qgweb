@@ -183,7 +183,7 @@ public class WhPhraseGenerator {
 			if (whole_match)
 				this.headHypernymDisambiguated = BingDisambiguator.getInstance().disambiguate(this.headHypernymTagSet, origSentence, ans.yield().toString());
 			else {
-				System.out.println("Not a whole match: "+ans.yield().toString()+" HEAD: "+answerTokenArray[answerNPHeadTokenIdx]);
+				System.out.println("Not a whole match: "+ans.yield().toString()+" HEAD: "+sentenceTokens.get(answerNPHeadTokenIdx));
 				this.headHypernymDisambiguated = new ArrayList<String>();
 			}
 		}
