@@ -526,7 +526,10 @@ public class AnalysisUtilities {
 				continue;
 			content += " "+word;
 		}
-		return content.substring(1);
+		if (content.length()>0)
+			return content.substring(1);
+		else
+			return sentence;
 	}
 
 	private LexicalizedParser parser;
