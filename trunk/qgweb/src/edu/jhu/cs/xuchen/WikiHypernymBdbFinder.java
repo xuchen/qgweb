@@ -91,12 +91,14 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 	 */
 	@Override
 	public HashSet<String> getHypernym(String name) {
+		name = AnalysisUtilities.getInstance().getContentWords(name);
+		System.out.println("NP: " + name);
 		name = name.toLowerCase();
 		int word_count = name.split("\\s+").length;
 		HashSet<Concept> cSet = acc.getConceptsByName(name, false);
 		HashSet<String> hSet = new HashSet<String>();
 		if (peoplePronouns.contains(name)) return hSet;
-		System.out.println("NP: " + name);
+		System.out.println("modified NP: " + name);
 
 	    Map<Concept,Integer> distanceMap = new HashMap<Concept,Integer>();
 		for (Concept concept:cSet) {
@@ -138,7 +140,7 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 					 * Wikipedia seems to contain too much info about movies and music
 					 * Dev set doesn't contain any of those, thus we hope Test set does neither
 					 */
-					if (hypernym.matches(".*(album|film|music|movie|media|culture)+.*")) continue;
+					if (hypernym.matches(".*(album|film|music|movie|media|culture|works)+.*")) continue;
 
 					// deal with plurals: Edingburgh: ports_and_harbours_of_scotland
 					ParseResult result = AnalysisUtilities.getInstance().parseSentence(hypernym);
@@ -155,9 +157,13 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 						if (pos.equals("NNS")) {
 							lemma = AnalysisUtilities.getInstance().getLemma(word, pos);
 							hList.add(lemma);
-							if (headWord.startsWith(lemma))
+							// don't work when headWord is "cities" "universities" etc
+							//if (headWord.startsWith(lemma)) {
+							if (head == leaves.get(i)) {
 								// incase the head word is plural
+								System.out.println("Changing plural: " + headWord + " -> " + lemma);
 								headWord = lemma;
+							}
 						}
 						else
 							hList.add(word);
@@ -170,7 +176,7 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 					if (hypernymWordnetSet != null && hypernymWordnetSet.contains(headWord))
 						hSet.add(hypernym);
 					else {
-						System.out.println("Hypernym excluded: " + hypernym + "HEAD: " + head);
+						System.out.println("Hypernym excluded: " + hypernym + " HEAD: " + headWord);
 					}
 				}
 			}

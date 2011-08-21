@@ -175,7 +175,7 @@ public class WhPhraseGenerator {
 				 * in this case we don't disambiguate since "location" is not a hypernym
 				 * of "in Scotland" but "Scotland"
 				 */
-				if (this.hypernymTagsSet.get(i) != this.headHypernymTagSet) {
+				if (!this.hypernymTagsSet.get(i).equals(this.headHypernymTagSet)) {
 					whole_match = false;
 					break;
 				}
