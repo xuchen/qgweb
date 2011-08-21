@@ -8,7 +8,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import edu.cmu.ark.AnalysisUtilities;
 import edu.cmu.ark.GlobalProperties;
+import edu.cmu.ark.ParseResult;
 import edu.cmu.ark.TregexPatternFactory;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.tregex.TregexMatcher;
@@ -67,7 +69,7 @@ public class WikiHypernymWrapper {
 			hypernymTagsSet.add(new HashSet<String>());
 		}
 			//noun phrases
-		tregexOpStr = "ROOT=root << NP=np";
+		tregexOpStr = "ROOT=root << NP|NNP|NNPS|PP=np";
 		matchPattern = TregexPatternFactory.getPattern(tregexOpStr);
 		matcher = matchPattern.matcher(sentence);
 		List<Tree> allLeaves = sentence.getLeaves();
@@ -82,6 +84,7 @@ public class WikiHypernymWrapper {
 				if (allLeaves.get(i) == npLast) end = i;
 			}
 			hypernymSet = this.finder.getHypernym(np);
+
 			if (hypernymSet.size() != 0) {
 				for(int i=start; i<=end; i++)
 					hypernymTagsSet.get(i).addAll(hypernymSet);

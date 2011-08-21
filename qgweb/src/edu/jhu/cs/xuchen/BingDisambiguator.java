@@ -22,6 +22,8 @@ import com.google.code.bing.search.schema.SourceType;
 import com.google.code.bing.search.schema.web.WebResult;
 import com.google.code.bing.search.schema.web.WebSearchOption;
 
+import edu.cmu.ark.AnalysisUtilities;
+
 /**
  * @author Xuchen Yao
  *
@@ -52,6 +54,8 @@ public class BingDisambiguator {
     public List<String> disambiguate(HashSet<String> hypernymSet, String sentence, String answer) {
     	long cHypernymContext, cAll;
     	Double p;
+    	answer = AnalysisUtilities.getInstance().getContentWords(answer);
+    	sentence = AnalysisUtilities.getInstance().getContentWords(sentence);
     	String context = sentence.replaceAll(answer, "").replaceAll(" and ", "").replaceAll(" or ", "");
     	sentence = sentence.replaceAll(" and ", "");
     	sentence = sentence.replaceAll(" or ", "");
