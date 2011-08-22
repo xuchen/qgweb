@@ -141,7 +141,7 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 					 * Wikipedia seems to contain too much info about movies and music
 					 * Dev set doesn't contain any of those, thus we hope Test set does neither
 					 */
-					if (hypernym.matches(".*(album|film|music|movie|media|culture|works)+.*")) continue;
+					if (hypernym.matches(".*(album|film|music|movie|media|culture|works|song|genre)+.*")) continue;
 
 					// deal with plurals: Edingburgh: ports_and_harbours_of_scotland
 					ParseResult result = AnalysisUtilities.getInstance().parseSentence(hypernym);

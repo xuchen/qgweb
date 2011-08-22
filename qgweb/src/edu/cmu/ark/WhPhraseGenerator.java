@@ -169,19 +169,21 @@ public class WhPhraseGenerator {
 		if (!baseline) {
 			this.headHypernymTagSet = this.hypernymTagsSet.get(answerNPHeadTokenIdx);
 			boolean whole_match = true;
+			HashSet<String> intersect = (HashSet<String>)this.headHypernymTagSet.clone();
 			for (int i=start; i<=end; i++) {
 				/*
 				 * ofttimes NE matcher matches "Scotland" but ans is "in Scotland"
 				 * in this case we don't disambiguate since "location" is not a hypernym
 				 * of "in Scotland" but "Scotland"
 				 */
-				if (!this.hypernymTagsSet.get(i).equals(this.headHypernymTagSet)) {
+				intersect.retainAll(this.hypernymTagsSet.get(i));
+				if (intersect.size()==0) {
 					whole_match = false;
 					break;
 				}
 			}
 			if (whole_match)
-				this.headHypernymDisambiguated = BingDisambiguator.getInstance().disambiguate(this.headHypernymTagSet, origSentence, ans.yield().toString());
+				this.headHypernymDisambiguated = BingDisambiguator.getInstance().disambiguate(intersect, origSentence, ans.yield().toString());
 			else {
 				System.out.println("Not a whole match: "+ans.yield().toString()+" HEAD: "+sentenceTokens.get(answerNPHeadTokenIdx));
 				for (int i=start; i<=end; i++) {
