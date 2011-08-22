@@ -457,6 +457,7 @@ public class AnalysisUtilities {
 		res = res.replaceAll("(\\d,) (\\d)", "$1$2"); //e.g., "5, 000, 000" -> "5,000,000"
 		res = res.replaceAll("``''", "");
 
+		res = res.replaceAll("_", " ");
 		//remove extra spaces
 		res = res.replaceAll("\\s\\s+", " ");
 		res = res.trim();

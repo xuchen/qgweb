@@ -56,11 +56,11 @@ public class BingDisambiguator {
     	Double p;
     	answer = AnalysisUtilities.getInstance().getContentWords(answer);
     	sentence = AnalysisUtilities.getInstance().getContentWords(sentence);
-    	String context = sentence.replaceAll(answer, "").replaceAll(" and ", "").replaceAll(" or ", "");
-    	sentence = sentence.replaceAll(" and ", "");
-    	sentence = sentence.replaceAll(" or ", "");
+    	String context = sentence.replaceAll(answer, "").replaceAll(" and ", " ").replaceAll(" or ", " ");
+    	sentence = sentence.replaceAll(" and ", " ");
+    	sentence = sentence.replaceAll(" or ", " ");
     	HashMap<String, Double> pmi= new HashMap<String, Double>();
-    	HashMap<String, Double> pmi1= new HashMap<String, Double>();
+    	HashMap<String, Long> pmi1= new HashMap<String, Long>();
     	HashMap<String, Double> pmi2= new HashMap<String, Double>();
     	if (hypernymSet.size() == 0) return new ArrayList<String>();
     	System.out.println("=====Disambiguate Start=====");
@@ -110,6 +110,7 @@ public class BingDisambiguator {
     		cAll = getTotalResults(answer+h+ " " + context);
     		p = cHypernymContext*1.0/cAll;
     		pmi.put(h, p);
+    		pmi1.put(h, cHypernymContext);
     		System.out.println(String.format("Hypernym/cHypernym/cAll/pmi: %s/%d/%d/%.2f", h, cHypernymContext, cAll,  p));
     	}
     	System.out.println("");
@@ -118,8 +119,13 @@ public class BingDisambiguator {
     	for (String s:sortedHypernyms) {
 	    	System.out.print(s+": "+pmi.get(s)+"\t");
     	}
+    	List<String> sortedHypernyms1 = sortByValue(pmi1);
+    	System.out.println("[Hypernym Count Only]");
+    	for (String s:sortedHypernyms1) {
+	    	System.out.print(s+": "+pmi1.get(s)+"\t");
+    	}
     	System.out.println("\n=====Disambiguate End=====");
-    	return sortedHypernyms;
+    	return sortedHypernyms1;
     }
 
     private static long getTotalResults (String query) {
