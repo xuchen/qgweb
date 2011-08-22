@@ -179,6 +179,7 @@ public class QuestionTransducer {
 		Tree answerPhrase;
 		Question tmp1 = inputQuestion.deeperCopy();
 		Question tmp2 = null;
+		Question tmpUnmovable = null;
 		List<Tree> outputTrees;
 
 		if(GlobalProperties.getDebug()) System.err.println("getQuestionsFromParse: input: "+tmp1.toString());
@@ -191,6 +192,8 @@ public class QuestionTransducer {
 		//mark phrases that should not be answer phrases,
 		//either due to syntactic constraints or conservative restrictions
 		tmp1.setTree(markUnmovablePhrases(tmp1.getTree()));
+		tmpUnmovable = tmp1.deeperCopy();
+		tmpUnmovable.setTree(markPossibleAnswerPhrasesUnmovable(tmpUnmovable.getTree()));
 		tmp1.setTree(markPossibleAnswerPhrases(tmp1.getTree()));
 		if(GlobalProperties.getDebug()) System.err.println("Number of Possible WH questions: "+numWHPhrases+"\n");
 
@@ -222,6 +225,62 @@ public class QuestionTransducer {
 			//Then, remove the answer phrase and put the question phrase at
 			//the front of the main clause before the subject.
 			outputTrees = moveWHPhrase(tmp2.getTree(), tmp2.getIntermediateTree(), i, subjectMovement);
+			List<String> qTypes = whGen.getQuestionTypes();
+
+			assert (outputTrees.size() == qTypes.size());
+
+
+			//post-process and filter the output
+			for(int j=0; j<outputTrees.size(); j++){
+				Tree t = outputTrees.get(j);
+				String qType = qTypes.get(j);
+				tmp2 = tmp2.deeperCopy();
+				tmp2.setQuestionType(qType);
+				tmp2.setTree(t);
+				AnalysisUtilities.upcaseFirstToken(tmp2.getTree());
+
+				relabelPunctuationAsQuestionMark(tmp2.getTree());
+				tmp2.setAnswerPhraseTree(answerPhrase);
+				if(GlobalProperties.getComputeFeatures()) QuestionFeatureExtractor.getInstance().extractFinalFeatures(tmp2);
+
+				if(avoidPronounsAndDemonstratives && (containsUnresolvedPronounsOrDemonstratives(tmp2))){
+					if(GlobalProperties.getDebug()) System.err.println("generateQuestionsFromParse: skipping due to pronouns");
+				}else{
+					questions.add(tmp2);
+				}
+
+				if(GlobalProperties.getDebug()) System.err.println();
+			}
+		}
+
+		//iterate over the possible answer phrases, generate
+		//questions for each unmovable phrase
+		for(int i=0; i<numWHPhrasesUnmovable; i++){
+			tmp2 = tmpUnmovable.deeperCopy();
+
+			answerPhrase = getAnswerPhraseUnmovable(tmp2.getTree(), i);
+			answerPhrase = removeMarkersFromTree(answerPhrase.deeperCopy());
+
+			//check whether the current answer phrase is the subject.
+			//if not, then decompose the main verb and perform subject auxiliary inversion
+			boolean subjectMovement = isSubjectMovement(tmp2.getTree(), i);
+			if(subjectMovement){
+				ensureVerbAgreementForSubjectWH(tmp2.getTree());
+				if(GlobalProperties.getComputeFeatures()) tmp2.setFeatureValue("isSubjectMovement", 1.0);
+				if(GlobalProperties.getComputeFeatures()) tmp2.setFeatureValue("whQuestion", 1.0);
+			}else{
+				//tmp2.setTree(decomposePredicate(tmp2.getTree()));
+				//tmp2.setTree(subjectAuxiliaryInversion(tmp2.getTree()));
+				if(GlobalProperties.getComputeFeatures()) tmp2.setFeatureValue("isSubjectMovement", 0.0);
+				if(GlobalProperties.getComputeFeatures()) tmp2.setFeatureValue("whQuestion", 1.0);
+			}
+			tmp2.setTree(relabelMainClause(tmp2.getTree()));
+
+			//Now generate questions by analyzing the answer phrase and choosing possible
+			//question words (e.g., what, who) from it.
+			//Then, remove the answer phrase and put the question phrase at
+			//the front of the main clause before the subject.
+			outputTrees = moveWHPhraseUnmovable(tmp2.getTree(), tmp2.getIntermediateTree(), i, subjectMovement);
 			List<String> qTypes = whGen.getQuestionTypes();
 
 			assert (outputTrees.size() == qTypes.size());
@@ -554,6 +613,132 @@ public class QuestionTransducer {
 		return answerPhrase;
 	}
 
+	/**
+	 * Thsi method returns the node for the ith possible answer phrase in this sentence
+	 * (after potential answer phrases have been identified by marking unmovable ones)
+	 *
+	 * @param inputTree
+	 * @param i
+	 * @return
+	 */
+	private Tree getAnswerPhraseUnmovable(Tree inputTree, int i){
+		Tree answerPhrase;
+		String tregexOpStr;
+		TregexPattern matchPattern;
+		String marker = "/^(UNMOVABLE-NP|PP|SBAR)-"+i+"$/";
+
+		tregexOpStr = marker+"=answer";
+		matchPattern = TregexPatternFactory.getPattern(tregexOpStr);
+		if(GlobalProperties.getDebug()) System.err.println("moveWHPhrase: inputTree:" + inputTree.toString());
+		//if(GlobalProperties.getDebug()) System.err.println("moveWHPhrase: tregexOpStr:" + tregexOpStr);
+		TregexMatcher matcher = matchPattern.matcher(inputTree);
+		matcher.find();
+		answerPhrase = matcher.getNode("answer");
+
+		return answerPhrase;
+	}
+
+
+	/**
+	 *
+	 * This method removes the answer phrase from its original position
+	 * and places it at the front of the main clause.
+	 *
+	 * Note: Tsurgeon operations are perhaps not optimal here.
+	 * Using the Stanford API to move nodes directly might be simpler...
+	 *
+	 */
+	private List<Tree> moveWHPhraseUnmovable(Tree inputTree, Tree intermediateTree, int i, boolean subjectMovement){
+		Tree copyTree2;
+		List<Tree> res = new ArrayList<Tree>();
+		Tree mainclauseNode;
+
+		String marker = "/^(UNMOVABLE-NP|UNMOVABLE-PP|UNMOVABLE-SBAR)-"+i+"$/";
+
+		List<Pair<TregexPattern, TsurgeonPattern>> ops = new ArrayList<Pair<TregexPattern, TsurgeonPattern>>();
+		List<TsurgeonPattern> ps = new ArrayList<TsurgeonPattern>();
+		String tregexOpStr;
+		TregexPattern matchPattern;
+
+		//extract the "answer" phrase and generate a WH phrase from it
+		tregexOpStr = "ROOT=root < (SQ=qclause << "+marker+"=answer < VP=predicate)";
+		matchPattern = TregexPatternFactory.getPattern(tregexOpStr);
+		if(GlobalProperties.getDebug()) System.err.println("moveWHPhrase: inputTree:" + inputTree.toString());
+		if(GlobalProperties.getDebug()) System.err.println("moveWHPhrase: tregexOpStr:" + tregexOpStr);
+		TregexMatcher matcher = matchPattern.matcher(inputTree);
+		matcher.find();
+		Tree phraseToMove = matcher.getNode("answer");
+
+		String whPhraseSubtree;
+
+		if(printExtractedPhrases) System.out.println("EXTRACTED\t"+phraseToMove.yield().toString());
+
+		whGen.generateWHPhraseSubtrees(removeMarkersFromTree(phraseToMove), intermediateTree.yield().toString());
+		List<String> whPhraseSubtrees = whGen.getWHPhraseSubtrees();
+		List<String> leftOverPrepositions = whGen.getLeftOverPrepositions();
+
+		//copyTree = inputTree.deeperCopy();
+		//The placeholder is necessary because tsurgeon will complain
+		//if an added node has no children. This placeholder is removed below.
+//		ps.add(Tsurgeon.parseOperation("insert (PREPPLACEHOLDER dummy) $+ answer"));
+//		ps.add(Tsurgeon.parseOperation("prune answer"));
+//		ps.add(Tsurgeon.parseOperation("insert (SBARQ=mainclause PLACEHOLDER=placeholder) >0 root"));
+//		ps.add(Tsurgeon.parseOperation("move qclause >-1 mainclause"));
+//		p = Tsurgeon.collectOperations(ps);
+//		ops.add(new Pair<TregexPattern,TsurgeonPattern>(matchPattern,p));
+//		Tsurgeon.processPatternsOnTree(ops, copyTree);
+
+		//copyTree = removeMarkersFromTree(copyTree);
+
+		//Now put each WH phrase into the tree and remove the original answer.
+		//Operate on the tree directly rather than using tsurgeon
+		//because tsurgeon can't parse operations that insert trees with special characters (e.g., ":")
+		for(int j=0; j<whPhraseSubtrees.size(); j++){
+			copyTree2 = inputTree.deeperCopy();
+			whPhraseSubtree = whPhraseSubtrees.get(j);
+
+//			if(GlobalProperties.getDebug()) System.err.println("moveWHPhrase: whPhraseSubtree:"+whPhraseSubtree);
+//			tregexOpStr = "ROOT < (SBARQ=mainclause < PLACEHOLDER=ph1) << (__=ph2Parent < PREPPLACEHOLDER=ph2)";
+//			matchPattern = TregexPatternFactory.getPattern(tregexOpStr);
+//			matcher = matchPattern.matcher(copyTree2);
+//			if(!matcher.find()){
+//				continue;
+//			}
+			matcher = matchPattern.matcher(copyTree2);
+			matcher.find();
+			mainclauseNode = matcher.getNode("answer");
+			if (mainclauseNode == null) continue;
+			//replace the wh placeholder with a wh phrase
+			int cc = mainclauseNode.numChildren();
+			for (int c=0; c<cc; c++)
+				mainclauseNode.removeChild(0);
+			mainclauseNode.addChild(0, AnalysisUtilities.getInstance().readTreeFromString(whPhraseSubtree));
+
+			copyTree2 = removeMarkersFromTree(copyTree2);
+			//Replace the pp placeholder with the left over preposition.
+			//This may happen when the answer phrase was a PP.
+			//e.g., John went to the game. -> What did John go to?
+//			prepPlaceholderParent = matcher.getNode("ph2Parent");
+//			int index = prepPlaceholderParent.indexOf(matcher.getNode("ph2"));
+//			if(leftOverPreposition != null && leftOverPreposition.length()>0){
+//				prepPlaceholderParent.addChild(index, AnalysisUtilities.getInstance().readTreeFromString(leftOverPreposition));
+//			}
+//			//now remove the left-over-preposition placeholder
+//			ps.clear();
+//			ps.add(Tsurgeon.parseOperation("prune ph2"));
+//			p = Tsurgeon.collectOperations(ps);
+//			ops.clear();
+//			ops.add(new Pair<TregexPattern,TsurgeonPattern>(TregexPatternFactory.getPattern("PREPPLACEHOLDER=ph2"),p));
+//			Tsurgeon.processPatternsOnTree(ops, copyTree2);
+
+			copyTree2 = moveLeadingAdjuncts(copyTree2);
+
+			if(GlobalProperties.getDebug()) System.err.println("moveWHPhrase: "+copyTree2.toString());
+			res.add(copyTree2);
+		}
+
+		return res;
+	}
 
 	/**
 	 *
@@ -1006,6 +1191,47 @@ public class QuestionTransducer {
 
 
 	/**
+	 * Also mark UNMOVABLE phrases as possible answers
+	 *
+	 * @param inputTree
+	 * @return
+	 */
+	private Tree markPossibleAnswerPhrasesUnmovable(Tree inputTree) {
+		Tree copyTree = inputTree.deeperCopy();
+		numWHPhrasesUnmovable = 0;
+
+		List<TsurgeonPattern> ps = new ArrayList<TsurgeonPattern>();
+		String tregexOpStr;
+		TregexPattern matchPattern;
+		TregexMatcher matcher;
+		Tree tmp;
+
+		//find and mark the main clause subject
+		tregexOpStr = "ROOT < (S < (NP|SBAR=subj $+ /,/ !$++ NP|SBAR))";
+		ps.add(Tsurgeon.parseOperation("relabel subj NP-0"));
+		matchPattern = TregexPatternFactory.getPattern(tregexOpStr);
+		matcher = matchPattern.matcher(copyTree);
+		if(matcher.find()){
+			tmp = matcher.getNode("subj");
+			tmp.label().setValue(tmp.label().toString()+"-0");
+			numWHPhrasesUnmovable++;
+		}
+
+		//noun phrases
+		tregexOpStr = "ROOT=root << UNMOVABLE-NP=np";
+		matchPattern = TregexPatternFactory.getPattern(tregexOpStr);
+		matcher = matchPattern.matcher(copyTree);
+		while(matcher.find()){
+			tmp = matcher.getNode("np");
+			tmp.label().setValue(tmp.label().toString()+"-"+numWHPhrasesUnmovable);
+			numWHPhrasesUnmovable++;
+		}
+
+		if(GlobalProperties.getDebug()) System.err.println("markPossibleAnswerPhrases: "+copyTree.toString());
+		return copyTree;
+	}
+
+	/**
 	 * Marks possible answer phrase nodes with indexes for later processing.
 	 * This step might be easier with the Stanford Parser API's Tree class methods
 	 * than with Tsurgeon...
@@ -1047,7 +1273,6 @@ public class QuestionTransducer {
 		if(GlobalProperties.getDebug()) System.err.println("markPossibleAnswerPhrases: "+copyTree.toString());
 		return copyTree;
 	}
-
 
 	/**
 	 * returns whether to perform subject-aux inversion
@@ -1250,6 +1475,7 @@ public class QuestionTransducer {
 
 
 	int numWHPhrases;  //the number of possible answer phrases identified in the source sentence.
+	int numWHPhrasesUnmovable;
 
 	private boolean avoidPronounsAndDemonstratives;  //don't produce questions with pronouns
 	private List<Question> questions;  //output questions, co-indexed with sourceTrees and featureValueLists
