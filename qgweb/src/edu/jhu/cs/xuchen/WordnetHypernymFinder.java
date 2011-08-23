@@ -2,6 +2,8 @@ package edu.jhu.cs.xuchen;
 
 import java.util.HashSet;
 
+import edu.cmu.ark.AnalysisUtilities;
+
 import net.didion.jwnl.JWNLException;
 import net.didion.jwnl.data.IndexWord;
 import net.didion.jwnl.data.POS;
@@ -31,7 +33,7 @@ public class WordnetHypernymFinder implements HypernymFinder {
 		if (peoplePronouns.contains(name)) return hSet;
 		System.out.println("WordNet hypernym finder:");
 		System.out.println("NP: " + name);
-		name = name.toLowerCase();
+		name = AnalysisUtilities.getInstance().getContentWords(name).toLowerCase();
 
 		IndexWord indexWord;
 		try {
