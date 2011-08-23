@@ -30,10 +30,10 @@ public class WordnetHypernymFinder implements HypernymFinder {
 	@Override
 	public HashSet<String> getHypernym(String name) {
 		HashSet<String> hSet = new HashSet<String>();
-		if (peoplePronouns.contains(name)) return hSet;
 		System.out.println("WordNet hypernym finder:");
 		System.out.println("NP: " + name);
 		name = AnalysisUtilities.getInstance().getContentWords(name).toLowerCase();
+		if (peoplePronouns.contains(name)) return hSet;
 
 		IndexWord indexWord;
 		try {

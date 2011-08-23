@@ -93,10 +93,10 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 		name = AnalysisUtilities.getInstance().getContentWords(name);
 		System.out.println("NP: " + name);
 		name = name.toLowerCase();
-		int word_count = name.split("\\s+").length;
-		HashSet<Concept> cSet = acc.getConceptsByName(name, false);
 		HashSet<String> hSet = new HashSet<String>();
 		if (peoplePronouns.contains(name)) return hSet;
+		int word_count = name.split("\\s+").length;
+		HashSet<Concept> cSet = acc.getConceptsByName(name, false);
 		System.out.println("modified NP: " + name);
 
 	    Map<Concept,Integer> distanceMap = new HashMap<Concept,Integer>();
