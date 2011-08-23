@@ -170,7 +170,11 @@ public class BingDisambiguator {
 
     	SearchRequest request = createSearchRequest(client, APPLICATION_KEY_OPTION, query);
 		SearchResponse response = client.search(request);
-		return response.getWeb().getTotal();
+		try {
+			return response.getWeb().getTotal();
+		} catch (NullPointerException e) {
+			return 0;
+		}
     }
 
 	/**
