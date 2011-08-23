@@ -72,29 +72,32 @@ public class BingDisambiguator {
     	System.out.println("## Original Answer: " + origAnswer);
     	System.out.println("## Modified Answer: " + answer);
     	System.out.println("## Hypernyms: " + hypernymSet);
+		sb.append("\n#CVS#,");
+		sb.append("\""+origSentence.replaceAll("\"","'")+"\"");
+		sb.append(",");
+		sb.append("\""+sentence.replaceAll("\"","'")+"\"");
+		sb.append(",");
+		sb.append("\""+context.replaceAll("\"","'")+"\"");
+		sb.append(",");
+		sb.append("\""+origAnswer.replaceAll("\"","'")+"\"");
+		sb.append(",");
+		sb.append("\""+answer.replaceAll("\"","'")+"\"");
+		sb.append(",");
+		sb.append("\""+hypernymSet.toString().replaceAll("\"","'")+"\"");
+		sb.append(",");
+
 		answer = "\"" + answer + "\"";
-		sb.append("#CVS#,");
-		sb.append(origSentence);
-		sb.append(",");
-		sb.append(sentence);
-		sb.append(",");
-		sb.append(context);
-		sb.append(",");
-		sb.append(origAnswer);
-		sb.append(",");
-		sb.append(answer);
-		sb.append(",");
-		sb.append(hypernymSet);
-		sb.append(",");
+		String origh;
     	for (String h:hypernymSet) {
 
+    		origh = h;
     		// pmi1: (hypernym + context) / (hypernym + answer + context)
     		// smaller is better
     		cHypernymContext = getTotalResults(h+" "+context);
     		// cAll should be less than cHypernymContext!
     		cAll = getTotalResults(answer+ " " + h+ " " + context);
     		p = cHypernymContext*1.0/cAll;
-    		pmi1.put(h, p);
+    		pmi1.put(origh, p);
     		System.out.println(String.format("## pmi1 Hypernym/cHypernymContext/cAll/pmi: %s/%d/%d/%.2f", h, cHypernymContext, cAll,  p));
 
 
@@ -103,17 +106,17 @@ public class BingDisambiguator {
     		h = "\"" + h + "\"";
     		cAllNear = getTotalResults(answer+" near:10 "+h+ " " + context);
     		p = cHypernymContext*1.0/cAllNear;
-    		pmi2.put(h, p);
+    		pmi2.put(origh, p);
     		System.out.println(String.format("## pmi2 Hypernym/cHypernymContext/cAllNear/pmi: %s/%d/%d/%.2f", h, cHypernymContext, cAllNear,  p));
 
     		// pmi3: hypernym + context
     		// larger is better
-    		pmi3.put(h, cHypernymContext);
+    		pmi3.put(origh, cHypernymContext);
     		System.out.println(String.format("## pmi3 Hypernym/cHypernymContext: %s/%d", h, cHypernymContext));
 
     		// pmi4: hypernym + answer + context
     		// larger is better
-    		pmi4.put(h, cAll);
+    		pmi4.put(origh, cAll);
     		System.out.println(String.format("## pmi4 Hypernym/cAll: %s/%d", h, cAll));
 
     	}
@@ -123,9 +126,9 @@ public class BingDisambiguator {
     	for (String s:sortedHypernyms1) {
 	    	System.out.print(s+": "+pmi1.get(s)+"\t");
     	}
-    	sb.append(sortedHypernyms1.get(0));
+    	sb.append("\""+sortedHypernyms1.get(0)+"\"");
     	sb.append(",");
-    	sb.append(sortedHypernyms1);
+    	sb.append("\""+sortedHypernyms1+"\"");
     	sb.append(",,");
 
     	List<String> sortedHypernyms2 = sortByValue(pmi2);
@@ -133,9 +136,9 @@ public class BingDisambiguator {
     	for (String s:sortedHypernyms2) {
 	    	System.out.print(s+": "+pmi2.get(s)+"\t");
     	}
-    	sb.append(sortedHypernyms2.get(0));
+    	sb.append("\""+sortedHypernyms2.get(0)+"\"");
     	sb.append(",");
-    	sb.append(sortedHypernyms2);
+    	sb.append("\""+sortedHypernyms2+"\"");
     	sb.append(",,");
 
     	List<String> sortedHypernyms3 = sortByValueReversed(pmi3);
@@ -143,9 +146,9 @@ public class BingDisambiguator {
     	for (String s:sortedHypernyms3) {
 	    	System.out.print(s+": "+pmi3.get(s)+"\t");
     	}
-    	sb.append(sortedHypernyms3.get(0));
+    	sb.append("\""+sortedHypernyms3.get(0)+"\"");
     	sb.append(",");
-    	sb.append(sortedHypernyms3);
+    	sb.append("\""+sortedHypernyms3+"\"");
     	sb.append(",,");
 
     	List<String> sortedHypernyms4 = sortByValueReversed(pmi4);
@@ -153,9 +156,9 @@ public class BingDisambiguator {
     	for (String s:sortedHypernyms4) {
 	    	System.out.print(s+": "+pmi4.get(s)+"\t");
     	}
-    	sb.append(sortedHypernyms4.get(0));
+    	sb.append("\""+sortedHypernyms4.get(0)+"\"");
     	sb.append(",");
-    	sb.append(sortedHypernyms4);
+    	sb.append("\""+sortedHypernyms4+"\"");
     	sb.append(",,");
     	sb.append("\n");
     	System.out.println(sb.toString());
