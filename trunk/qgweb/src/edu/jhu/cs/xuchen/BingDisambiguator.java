@@ -15,7 +15,6 @@ import com.google.code.bing.search.client.BingSearchClient;
 import com.google.code.bing.search.client.BingSearchServiceClientFactory;
 import com.google.code.bing.search.client.BingSearchClient.SearchRequestBuilder;
 import com.google.code.bing.search.schema.AdultOption;
-import com.google.code.bing.search.schema.SearchOption;
 import com.google.code.bing.search.schema.SearchRequest;
 import com.google.code.bing.search.schema.SearchResponse;
 import com.google.code.bing.search.schema.SourceType;
@@ -119,7 +118,7 @@ public class BingDisambiguator {
     	for (String s:sortedHypernyms) {
 	    	System.out.print(s+": "+pmi.get(s)+"\t");
     	}
-    	List<String> sortedHypernyms1 = sortByValue(pmi1);
+    	List<String> sortedHypernyms1 = sortByValueReversed(pmi1);
     	System.out.println("[Hypernym Count Only]");
     	for (String s:sortedHypernyms1) {
 	    	System.out.print(s+": "+pmi1.get(s)+"\t");
@@ -187,6 +186,28 @@ public class BingDisambiguator {
             public int compare(Object o1, Object o2) {
                 Object v1 = m.get(o1);
                 Object v2 = m.get(o2);
+                if (v1 == null) {
+                    return (v2 == null) ? 0 : 1;
+                }
+                else if (v1 instanceof Comparable) {
+                    return ((Comparable) v1).compareTo(v2);
+                }
+                else {
+                    return 0;
+                }
+            }
+        });
+        return keys;
+    }
+
+	@SuppressWarnings("unchecked")
+    public static List sortByValueReversed(final Map m) {
+        List keys = new ArrayList();
+        keys.addAll(m.keySet());
+        Collections.sort(keys, new Comparator() {
+            public int compare(Object o1, Object o2) {
+                Object v2 = m.get(o1);
+                Object v1 = m.get(o2);
                 if (v1 == null) {
                     return (v2 == null) ? 0 : 1;
                 }

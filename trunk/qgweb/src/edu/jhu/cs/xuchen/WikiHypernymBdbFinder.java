@@ -5,7 +5,6 @@ package edu.jhu.cs.xuchen;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,7 +13,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeMap;
 import java.util.zip.GZIPInputStream;
 
 import edu.cmu.ark.AnalysisUtilities;
@@ -141,7 +139,8 @@ public class WikiHypernymBdbFinder implements HypernymFinder {
 					 * Wikipedia seems to contain too much info about movies and music
 					 * Dev set doesn't contain any of those, thus we hope Test set does neither
 					 */
-					if (hypernym.matches(".*(album|film|music|movie|media|culture|works|song|genre|entertainment|cinema|fiction|science|series)+.*")) continue;
+					if (hypernym.matches(".*(album|film|music|movie|media|culture|works|song|genre|entertainment|cinema|fiction|science|series" +
+							"|book| by |episode|history|rock|jazz)+.*")) continue;
 
 					// deal with plurals: Edingburgh: ports_and_harbours_of_scotland
 					ParseResult result = AnalysisUtilities.getInstance().parseSentence(hypernym);

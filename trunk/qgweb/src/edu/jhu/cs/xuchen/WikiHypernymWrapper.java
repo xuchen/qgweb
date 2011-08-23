@@ -8,14 +8,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import edu.cmu.ark.AnalysisUtilities;
 import edu.cmu.ark.GlobalProperties;
-import edu.cmu.ark.ParseResult;
 import edu.cmu.ark.TregexPatternFactory;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.tregex.TregexMatcher;
 import edu.stanford.nlp.trees.tregex.TregexPattern;
-import edu.stanford.nlp.util.IntPair;
 
 /**
  * @author Xuchen Yao
@@ -26,11 +23,14 @@ public class WikiHypernymWrapper {
 
 	protected HypernymFinder finder;
 
+	protected WordnetHypernymFinder finder1;
+
 	private WikiHypernymWrapper(FINDER f) {
 		if (f == FINDER.SMALL)
 			finder = new WikiHypernymFuzzyFinder(GlobalProperties.getProperties().getProperty("hyponymData", "models"+File.separator+"hyponym.500.ser.gz"));
 		else
 			finder = new WikiHypernymBdbFinder(GlobalProperties.getProperties().getProperty("WikiNetConfigFile", ""));
+		finder1 = new WordnetHypernymFinder();
 	}
 
 	private static WikiHypernymWrapper instance;
@@ -56,6 +56,7 @@ public class WikiHypernymWrapper {
 
 		String tregexOpStr, np;
 		HashSet<String> hypernymSet;
+		HashSet<String> hypernymSet1;
 		TregexPattern matchPattern;
 		TregexMatcher matcher;
 		Tree tmp;
@@ -84,10 +85,13 @@ public class WikiHypernymWrapper {
 				if (allLeaves.get(i) == npLast) end = i;
 			}
 			hypernymSet = this.finder.getHypernym(np);
+			hypernymSet1 = this.finder1.getHypernym(np);
 
 			if (hypernymSet.size() != 0) {
-				for(int i=start; i<=end; i++)
+				for(int i=start; i<=end; i++) {
 					hypernymTagsSet.get(i).addAll(hypernymSet);
+					hypernymTagsSet.get(i).addAll(hypernymSet1);
+				}
 			}
 		}
 
