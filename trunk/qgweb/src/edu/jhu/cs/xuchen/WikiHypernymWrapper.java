@@ -84,13 +84,20 @@ public class WikiHypernymWrapper {
 				if (allLeaves.get(i) == npLeaves.get(0)) start = i;
 				if (allLeaves.get(i) == npLast) end = i;
 			}
-			hypernymSet = this.finder.getHypernym(np);
+
+			// if WordNet can't find a hypernym, then use WikiNet
 			hypernymSet1 = this.finder1.getHypernym(np);
 
-			if (hypernymSet.size() != 0) {
+			if (hypernymSet1.size() != 0) {
 				for(int i=start; i<=end; i++) {
-					hypernymTagsSet.get(i).addAll(hypernymSet);
 					hypernymTagsSet.get(i).addAll(hypernymSet1);
+				}
+			} else {
+				hypernymSet = this.finder.getHypernym(np);
+				if (hypernymSet.size() != 0) {
+					for(int i=start; i<=end; i++) {
+						hypernymTagsSet.get(i).addAll(hypernymSet);
+					}
 				}
 			}
 		}
