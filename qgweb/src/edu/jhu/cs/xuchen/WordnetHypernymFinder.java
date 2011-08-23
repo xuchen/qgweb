@@ -13,12 +13,25 @@ import net.didion.jwnl.dictionary.Dictionary;
 
 public class WordnetHypernymFinder implements HypernymFinder {
 
+	private static HashSet<String> peoplePronouns = null;
+
+	public WordnetHypernymFinder() {
+		if (peoplePronouns == null) {
+			peoplePronouns = new HashSet<String>();
+			String[] tokens = "its my her hers his their theirs our ours your yours i he her him me she us we you myself yourself ourselves herself himself it this that they these those".split("\\s+");
+			for(int i=0; i<tokens.length; i++){
+				peoplePronouns.add(tokens[i]);
+			}
+		}
+	}
+
 	@Override
 	public HashSet<String> getHypernym(String name) {
+		HashSet<String> hSet = new HashSet<String>();
+		if (peoplePronouns.contains(name)) return hSet;
 		System.out.println("WordNet hypernym finder:");
 		System.out.println("NP: " + name);
 		name = name.toLowerCase();
-		HashSet<String> hSet = new HashSet<String>();
 
 		IndexWord indexWord;
 		try {
@@ -31,7 +44,7 @@ public class WordnetHypernymFinder implements HypernymFinder {
 						if (pointerArr != null)
 							for (Pointer x : pointerArr) {
 								for (Word w:x.getTargetSynset().getWords()){
-									hSet.add(w.getLemma());
+									hSet.add(w.getLemma().replaceAll("_", " "));
 								}
 							}
 					}
