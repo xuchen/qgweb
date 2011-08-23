@@ -51,78 +51,114 @@ public class BingDisambiguator {
     }
 
     public List<String> disambiguate(HashSet<String> hypernymSet, String sentence, String answer) {
-    	long cHypernymContext, cAll;
+    	long cHypernymContext, cAll, cAllNear;
+    	StringBuffer sb = new StringBuffer();
+    	String origSentence = sentence, origAnswer = answer;
     	Double p;
     	answer = AnalysisUtilities.getInstance().getContentWords(answer);
     	sentence = AnalysisUtilities.getInstance().getContentWords(sentence);
     	String context = sentence.replaceAll(answer, "").replaceAll(" and ", " ").replaceAll(" or ", " ");
     	sentence = sentence.replaceAll(" and ", " ");
     	sentence = sentence.replaceAll(" or ", " ");
-    	HashMap<String, Double> pmi= new HashMap<String, Double>();
-    	HashMap<String, Long> pmi1= new HashMap<String, Long>();
+    	HashMap<String, Double> pmi1= new HashMap<String, Double>();
+    	HashMap<String, Long> pmi3= new HashMap<String, Long>();
+    	HashMap<String, Long> pmi4= new HashMap<String, Long>();
     	HashMap<String, Double> pmi2= new HashMap<String, Double>();
     	if (hypernymSet.size() == 0) return new ArrayList<String>();
     	System.out.println("=====Disambiguate Start=====");
-    	System.out.println("Sentence: " + sentence);
-    	System.out.println("Context: " + context);
-    	System.out.println("Answer: " + answer);
-    	System.out.println("Hypernyms: " + hypernymSet);
+    	System.out.println("## Original Sentence: " + origSentence);
+    	System.out.println("## Modified Sentence: " + sentence);
+    	System.out.println("## Context: " + context);
+    	System.out.println("## Original Answer: " + origAnswer);
+    	System.out.println("## Modified Answer: " + answer);
+    	System.out.println("## Hypernyms: " + hypernymSet);
 		answer = "\"" + answer + "\"";
-//    	for (String h:hypernymSet) {
-//    		h = "\"" + h + "\"";
-//    		cHypernymContext = getTotalResults(h+" "+context);
-//    		// cAll should be less than cHypernymContext!
-//    		cAll = getTotalResults(answer+" near:10 "+h+ " " + context);
-//    		if (cAll > cHypernymContext) continue;
-//    		p = cHypernymContext*1.0/cAll;
-//    		pmi.put(h, p);
-//    		System.out.println(String.format("[near:10] Hypernym/cHypernym/cAll/pmi: %s/%d/%d/%.2f", h, cHypernymContext, cAll,  p));
-//    		cAll = getTotalResults(answer+" near:20 "+h+ " " + context);
-//    		p = cHypernymContext*1.0/cAll;
-//    		pmi1.put(h, p);
-//    		System.out.println(String.format("[near:20] Hypernym/cHypernym/cAll/pmi: %s/%d/%d/%.2f", h, cHypernymContext, cAll,  p));
-//    		cAll = getTotalResults(answer+" near:30 "+h+ " " + context);
-//    		p = cHypernymContext*1.0/cAll;
-//    		pmi2.put(h, p);
-//    		System.out.println(String.format("[near:30] Hypernym/cHypernym/cAll/pmi: %s/%d/%d/%.2f", h, cHypernymContext, cAll,  p));
-//    	}
-//    	System.out.println("");
-//    	List<String> sortedHypernyms = sortByValue(pmi);
-//    	System.out.println("[Hypernym+Answer]");
-//    	for (String s:sortedHypernyms) {
-//	    	System.out.print(s+": "+pmi.get(s)+"\t");
-//    	}
-//    	List<String> sortedHypernyms1 = sortByValue(pmi1);
-//    	System.out.println("[Hypernym   Only]");
-//    	for (String s:sortedHypernyms1) {
-//	    	System.out.print(s+": "+pmi1.get(s)+"\t");
-//    	}
-//    	List<String> sortedHypernyms2 = sortByValue(pmi2);
-//    	System.out.println("[Hypernym   Only]");
-//    	for (String s:sortedHypernyms2) {
-//	    	System.out.print(s+": "+pmi2.get(s)+"\t");
-//    	}
+		sb.append("#CVS#,");
+		sb.append(origSentence);
+		sb.append(",");
+		sb.append(sentence);
+		sb.append(",");
+		sb.append(context);
+		sb.append(",");
+		sb.append(origAnswer);
+		sb.append(",");
+		sb.append(answer);
+		sb.append(",");
+		sb.append(hypernymSet);
+		sb.append(",");
     	for (String h:hypernymSet) {
-    		//h = "\"" + h + "\"";
+
+    		// pmi1: (hypernym + context) / (hypernym + answer + context)
+    		// smaller is better
     		cHypernymContext = getTotalResults(h+" "+context);
     		// cAll should be less than cHypernymContext!
-    		cAll = getTotalResults(answer+h+ " " + context);
+    		cAll = getTotalResults(answer+ " " + h+ " " + context);
     		p = cHypernymContext*1.0/cAll;
-    		pmi.put(h, p);
-    		pmi1.put(h, cHypernymContext);
-    		System.out.println(String.format("Hypernym/cHypernym/cAll/pmi: %s/%d/%d/%.2f", h, cHypernymContext, cAll,  p));
+    		pmi1.put(h, p);
+    		System.out.println(String.format("## pmi1 Hypernym/cHypernymContext/cAll/pmi: %s/%d/%d/%.2f", h, cHypernymContext, cAll,  p));
+
+
+    		// pmi2: (hypernym + context) / (answer NEAR hypernym + context)
+    		// smaller is better
+    		h = "\"" + h + "\"";
+    		cAllNear = getTotalResults(answer+" near:10 "+h+ " " + context);
+    		p = cHypernymContext*1.0/cAllNear;
+    		pmi2.put(h, p);
+    		System.out.println(String.format("## pmi2 Hypernym/cHypernymContext/cAllNear/pmi: %s/%d/%d/%.2f", h, cHypernymContext, cAllNear,  p));
+
+    		// pmi3: hypernym + context
+    		// larger is better
+    		pmi3.put(h, cHypernymContext);
+    		System.out.println(String.format("## pmi3 Hypernym/cHypernymContext: %s/%d", h, cHypernymContext));
+
+    		// pmi4: hypernym + answer + context
+    		// larger is better
+    		pmi4.put(h, cAll);
+    		System.out.println(String.format("## pmi4 Hypernym/cAll: %s/%d", h, cAll));
+
     	}
     	System.out.println("");
-    	List<String> sortedHypernyms = sortByValue(pmi);
-    	System.out.println("[Hypernym+Answer]");
-    	for (String s:sortedHypernyms) {
-	    	System.out.print(s+": "+pmi.get(s)+"\t");
-    	}
-    	List<String> sortedHypernyms1 = sortByValueReversed(pmi1);
-    	System.out.println("[Hypernym Count Only]");
+    	List<String> sortedHypernyms1 = sortByValue(pmi1);
+    	System.out.println("## pmi1:");
     	for (String s:sortedHypernyms1) {
 	    	System.out.print(s+": "+pmi1.get(s)+"\t");
     	}
+    	sb.append(sortedHypernyms1.get(0));
+    	sb.append(",");
+    	sb.append(sortedHypernyms1);
+    	sb.append(",,");
+
+    	List<String> sortedHypernyms2 = sortByValue(pmi2);
+    	System.out.println("\n## pmi2:");
+    	for (String s:sortedHypernyms2) {
+	    	System.out.print(s+": "+pmi2.get(s)+"\t");
+    	}
+    	sb.append(sortedHypernyms2.get(0));
+    	sb.append(",");
+    	sb.append(sortedHypernyms2);
+    	sb.append(",,");
+
+    	List<String> sortedHypernyms3 = sortByValueReversed(pmi3);
+    	System.out.println("\n## pmi3:");
+    	for (String s:sortedHypernyms3) {
+	    	System.out.print(s+": "+pmi3.get(s)+"\t");
+    	}
+    	sb.append(sortedHypernyms3.get(0));
+    	sb.append(",");
+    	sb.append(sortedHypernyms3);
+    	sb.append(",,");
+
+    	List<String> sortedHypernyms4 = sortByValueReversed(pmi4);
+    	System.out.println("\n## pmi4:");
+    	for (String s:sortedHypernyms4) {
+	    	System.out.print(s+": "+pmi4.get(s)+"\t");
+    	}
+    	sb.append(sortedHypernyms4.get(0));
+    	sb.append(",");
+    	sb.append(sortedHypernyms4);
+    	sb.append(",,");
+    	sb.append("\n");
+    	System.out.println(sb.toString());
     	System.out.println("\n=====Disambiguate End=====");
     	return sortedHypernyms1;
     }
