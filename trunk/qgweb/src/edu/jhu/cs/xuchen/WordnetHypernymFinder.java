@@ -23,16 +23,18 @@ public class WordnetHypernymFinder implements HypernymFinder {
 		IndexWord indexWord;
 		try {
 			indexWord = Dictionary.getInstance().getIndexWord(POS.NOUN, name);
-			Synset[] set = indexWord.getSenses();
-			if (set != null) {
-				for (Synset s:set) {
-					Pointer[] pointerArr = s.getPointers(PointerType.HYPERNYM);
-					if (pointerArr != null)
-						for (Pointer x : pointerArr) {
-							for (Word w:x.getTargetSynset().getWords()){
-								hSet.add(w.getLemma());
+			if (indexWord != null) {
+				Synset[] set = indexWord.getSenses();
+				if (set != null) {
+					for (Synset s:set) {
+						Pointer[] pointerArr = s.getPointers(PointerType.HYPERNYM);
+						if (pointerArr != null)
+							for (Pointer x : pointerArr) {
+								for (Word w:x.getTargetSynset().getWords()){
+									hSet.add(w.getLemma());
+								}
 							}
-						}
+					}
 				}
 			}
 		} catch (JWNLException e) {
