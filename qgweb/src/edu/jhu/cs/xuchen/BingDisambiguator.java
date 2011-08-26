@@ -163,7 +163,7 @@ public class BingDisambiguator {
     	sb.append("\n");
     	System.out.println(sb.toString());
     	System.out.println("\n=====Disambiguate End=====");
-    	return sortedHypernyms1;
+    	return sortedHypernyms4;
     }
 
     private static long getTotalResults (String query) {

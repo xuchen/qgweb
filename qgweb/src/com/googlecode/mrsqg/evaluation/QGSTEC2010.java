@@ -35,7 +35,7 @@ public class QGSTEC2010 {
 	private Instance currentInstance;
 
 	private TestXmlParser parser;
-	
+
 
 	public QGSTEC2010 (String file, boolean dev) {
 		this(new File(file), dev);
@@ -257,7 +257,8 @@ public class QGSTEC2010 {
 	public static void main(String[] args) {
 		//File file = new File("/home/xcyao/delphin/mrs.xml/QuestionsFromSentences.Test.2010.small.xml");
 		//File file = new File("/home/xcyao/delphin/eval/QuestionsFromSentences.Test.2010.Saarland.xml");
-		File file = new File("/home/xcyao/delphin/mrs.xml/QuestionsFromSentences.Development.corrected.xml");
+		//File file = new File("/home/xcyao/delphin/mrs.xml/QuestionsFromSentences.Development.corrected.xml");
+		File file = new File("/home/xcyao/delphin/mrs.xml/QuestionsFromSentences.Test.2010.good.xml");
 		QGSTEC2010 q = new QGSTEC2010(file, true);
 		q.toXML(System.out);
 	}
