@@ -93,6 +93,7 @@ public class QuestionAsker {
 		boolean avoidFreqWords = false;
 		boolean dropPro = true;
 		boolean justWH = false;
+		boolean isDev = true;
 		String testInFile = null, testOutFile = null;
 
 		for(int i=0;i<args.length;i++){
@@ -129,6 +130,8 @@ public class QuestionAsker {
 			}else if(args[i].equals("--test-out")){
 				testOutFile = args[i+1];
 				i++;
+			}else if(args[i].equals("--is-test")){
+				isDev = false;
 			}
 		}
 
@@ -144,7 +147,7 @@ public class QuestionAsker {
 
 		if (testInFile != null && testOutFile != null) {
 
-			QGSTEC2010 QGSTEC2010processor = new QGSTEC2010(testInFile, true);
+			QGSTEC2010 QGSTEC2010processor = new QGSTEC2010(testInFile, isDev);
 
 			ArrayList<Instance> instanceList = QGSTEC2010processor.getInstanceList();
 			String text, questionType;
