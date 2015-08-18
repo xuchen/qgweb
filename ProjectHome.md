@@ -1,0 +1,1 @@
+Michael Heilman's "Question Transducer" expanded with web resources: http://www.ark.cs.cmu.edu/mheilman/questions/
